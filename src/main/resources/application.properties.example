@@ -1,0 +1,11 @@
+# Configuraci�n de la base de datos H2
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+twitch.clientId=MY_CLIENT_ID
+twitch.clientSecret=MY_CLIENT_SECRET
+twitch.accessToken=MY_ACCESS_TOKEN
+twitch.oauthToken=MY_OAUTH_TOKEN
+twitch.channel=MY_CHANNEL_NAME
