@@ -56,14 +56,27 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
         logger.info("mandando mensaje a websocket");
         EventUser user = event.getUser();
         boolean firstMessage = event.isDesignatedFirstMessage();
-        this.session.sendMessage(new TextMessage(
-                "{" +
-                        "\"username\": \""+user.getName()+ "\", "+
-                        "\"userId\": \""+user.getId()+ "\", "+
-                        "\"firstMessage\": "+firstMessage+ ", "+
-                        "\"message\": \""+event.getMessage()+ "\""+
-                        "}"
-        ));
+        try {
+            mandaMensajeJson(event, user, firstMessage);
+        }catch (IOException e){
+            logger.error("no se ha podido mandar el mensaje vía Websocket");
+        }
+    }
+
+    private void mandaMensajeJson(ChannelMessageEvent event, EventUser user, boolean firstMessage) throws IOException {
+        try {
+            this.session.sendMessage(new TextMessage(
+                    "{" +
+                            "\"username\": \""+ user.getName()+ "\", "+
+                            "\"userId\": \""+ user.getId()+ "\", "+
+                            "\"firstMessage\": "+ firstMessage + ", "+
+                            "\"message\": \""+ event.getMessage()+ "\""+
+                            "}"
+            ));
+        }catch (IOException e){
+            logger.error("fallo al mandar al cliente websocket");
+        }
+
     }
 
     private String generateRandomMessage() {

@@ -2,18 +2,13 @@
 <html>
 <head>
     <title>WebSocket Client</title>
-    <style>
-        #messages {
-            height: 200px;
-            overflow: scroll;
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-<h1>WebSocket Client</h1>
+<!--h1>WebSocket Client</h1-->
 <div id="messages"></div>
-<input type="text" id="messageInput" placeholder="Enter a message">
-<button id="sendButton">Send</button>
+<!--input type="text" id="messageInput" placeholder="Enter a message">
+<button id="sendButton">Send</button-->
 
 <script>
     const socket = new WebSocket('ws://localhost:8080/websocket');
@@ -30,7 +25,7 @@
     socket.onclose = function () {
         console.log('WebSocket connection closed.');
     };
-
+    /*
     document.getElementById('sendButton').addEventListener('click', function () {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value;
@@ -38,11 +33,46 @@
         messageInput.value = '';
     });
 
+     */
+    const userColors = {};
     function displayMessage(message) {
+        message = JSON.parse(message);
+        console.log(message);
         const messagesDiv = document.getElementById('messages');
+        const divElement = document.createElement('div');
+        divElement.className = "card"
+        const cardHeaderElement = document.createElement('div');
+        cardHeaderElement.className = "card__header"
+        const imageElement = document.createElement("img");
+        imageElement.src = "avatar.png";
+        imageElement.className="avatar";
+        imageElement.alt="Avatar del autor";
+        cardHeaderElement.appendChild(imageElement);
+        const headerElement = document.createElement('h2');
+        headerElement.className="card__title";
+        headerElement.textContent = message.username;
+        let color;
+        // Verificar si el usuario ya tiene un color asignado
+        if (userColors.hasOwnProperty(message.username)) {
+            color = userColors[message.username];
+        } else {
+            // Generar un color aleatorio y asignarlo al usuario
+            const colors = ['red', 'blue', 'green', 'orange', 'purple'];
+            color = colors[Math.floor(Math.random() * colors.length)];
+            userColors[message.username] = color;
+        }
+        headerElement.style.color = color;
+        console.log("color de usuario: " + message.username + ": " + color);
+        cardHeaderElement.appendChild(headerElement);
+        divElement.appendChild(cardHeaderElement);
         const messageElement = document.createElement('p');
-        messageElement.textContent = message;
-        messagesDiv.appendChild(messageElement);
+        messageElement.className="card__content";
+        messageElement.textContent = message.message;
+        divElement.appendChild(messageElement);
+        messagesDiv.appendChild(divElement);
+        setTimeout(function() {
+            divElement.remove();
+        }, 20000);
     }
 </script>
 </body>
