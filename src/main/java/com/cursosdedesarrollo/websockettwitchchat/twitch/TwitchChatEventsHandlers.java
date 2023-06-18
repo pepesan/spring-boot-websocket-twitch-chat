@@ -61,6 +61,7 @@ public class TwitchChatEventsHandlers {
             if (message.startsWith("!so")){
                 String channelName = message.substring(4);
                 String streamTitle = null;
+                String categoryName = null;
                 try {
                     List<User> users = twitchHelixClient.client.getUsers(
                             null,
@@ -83,12 +84,16 @@ public class TwitchChatEventsHandlers {
                     List<Stream> listado = resultList.getStreams();
                     logger.info("numero de streams: " + listado.size());
                     listado.forEach(stream -> {
-                        logger.info("ID: " + stream.getId() + " - Title: " + stream.getTitle());
+                        String streamString = "ID: " + stream.getId() + " - Title: " + stream.getTitle() + " - Categoría: " + stream.getGameName();
+                        logger.info(streamString);
                     });
                     if(listado.size()>0){
-                        streamTitle = listado.get(0).getTitle();
+                        Stream ultimoStream = listado.get(0);
+                        streamTitle = ultimoStream.getTitle();
+                        categoryName = ultimoStream.getGameName();
                     }else {
                         streamTitle = "Sin titulo disponible";
+                        categoryName  = "Sin Categoría Disponible";
                     }
 
                     VideoList resultVideoList = twitchHelixClient.client.getVideos(
@@ -104,8 +109,8 @@ public class TwitchChatEventsHandlers {
                             null,
                             null).execute();
 
-                    resultVideoList.getVideos().forEach(video -> {
-                        logger.info(video.getId() + ": " + video.getTitle() + " - by: " + video.getUserName());
+                    resultVideoList.getVideos().forEach( (Video video) -> {
+                        logger.info(video.getId() + ": " + video.getTitle() + " - by: " + video.getUserName() + " - tostring: " + video.toString());
                     });
                     List<Video> listadoVideos = resultVideoList.getVideos();
                     logger.info("numero de videos: " + listadoVideos.size());
@@ -118,10 +123,15 @@ public class TwitchChatEventsHandlers {
                     logger.error("Petando en la petición Helix");
                     logger.error(e.getMessage());
                 }
-                if (streamTitle != null && !streamTitle.equals(""))
-                bot.sendMessage(channel,"Echale un vistazo al canal de https://twitch.tv/"+channelName
-                        + ". El último video fue sobre: " + streamTitle
-                );
+                if (streamTitle != null && !streamTitle.equals("")){
+                    String cadenaSalida = "Echale un vistazo al canal de https://twitch.tv/"+channelName
+                            + ". El último video fue sobre: " + streamTitle ;
+                    if (categoryName!= null & !categoryName.equals("Sin Categoría Disponible")){
+                        cadenaSalida+= " y suele streamear en la categoría: " + categoryName;
+                    }
+
+                    bot.sendMessage(channel,cadenaSalida);
+                }
             }
         }
     }
