@@ -5,6 +5,7 @@ import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
 import com.github.twitch4j.helix.domain.Video;
 import com.github.twitch4j.helix.domain.VideoList;
+import com.github.twitch4j.pubsub.events.ChannelBitsEvent;
 import com.netflix.hystrix.HystrixCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,8 @@ public class TwitchChatClient {
     IDisposable handlerOnMessage;
     private String channel;
     private String oauthToken;
+    public String clientId;
+    public String clientSecret;
     public TwitchChatClient(@Value("${twitch.clientId}") String clientId,
                             @Value("${twitch.clientSecret}") String clientSecret,
                             @Value("${twitch.accessToken}") String accessToken,
@@ -44,6 +47,9 @@ public class TwitchChatClient {
                             @Value("${twitch.channel}") String channel) {
         this.channel = channel;
         this.oauthToken = oauthToken;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+
         twitchClient = TwitchClientBuilder.builder()
                 .withEnableHelix(true)
                 .withEnableChat(true)
@@ -57,33 +63,6 @@ public class TwitchChatClient {
         twitchClient.getChat().joinChannel(channelName);
         registerEvents();
     }
-    public String getChannelID(String channelName ){
-        List<User> users = twitchClient.getHelix().getUsers(
-                channel,
-                Arrays.asList(),
-                Collections.singletonList(channelName)).execute().getUsers();
-        logger.info(users.get(0).toString());
-        return users.get(0).toString();
-    }
-    /*
-    public String getLastChannelVideoTitle(String channelName ){
-        VideoList videoList = this.twitchClient.getHelix().getStreams(
-                null,
-                null,
-                null,
-                1,
-                null,
-                new ArrayList<>(),
-                )
-        if (videoList != null && videoList.getVideos() != null && !videoList.getVideos().isEmpty()) {
-            Video ultimoVideo = videoList.getVideos().get(0);
-            String tituloUltimoVideo = ultimoVideo.getTitle();
-            System.out.println("Título del último video: " + tituloUltimoVideo);
-        }
-        return "Ni idea";
-    }
-
-     */
 
     public void registerEvents(){
         handlerOnMessage = twitchClient
@@ -102,11 +81,14 @@ public class TwitchChatClient {
                                     logger.error("fallo al mandar mensaje al webssocket");
                                     throw new RuntimeException(e);
                                 }
-                                // this.sendMessage(channel,"Estamos grabando un curso para Youtube. Mientras tanto no podemos atender al chat. Cuando terminemos podemos atender tus preguntas.");
                             }
 
                         }
                 );
+        twitchClient.getEventManager().onEvent(ChannelBitsEvent.class,
+                event -> {
+
+                });
     }
 
     public void sendMessage(String channelName, String message) {

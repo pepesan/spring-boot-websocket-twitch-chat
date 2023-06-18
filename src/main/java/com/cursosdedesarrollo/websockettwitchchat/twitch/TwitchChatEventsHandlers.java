@@ -3,15 +3,21 @@ package com.cursosdedesarrollo.websockettwitchchat.twitch;
 
 import com.cursosdedesarrollo.websockettwitchchat.websocket.MyWebSocketHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
+import com.github.twitch4j.helix.domain.*;
+import feign.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.TextMessage;
-
-import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 @Component
 public class TwitchChatEventsHandlers {
+
+    @Autowired
+    private TwitchHelixClient twitchHelixClient;
 
     private static final Logger logger = LoggerFactory.getLogger(TwitchChatEventsHandlers.class);
     public void executeCommands(ChannelMessageEvent event, TwitchChatClient bot, String channel, MyWebSocketHandler myWebSocketHandler) {
@@ -54,10 +60,67 @@ public class TwitchChatEventsHandlers {
             }
             if (message.startsWith("!so")){
                 String channelName = message.substring(4);
-                // String channelToString = bot.getChannelID(channelName);
-                // logger.info("channelToString: " + channelToString);
+                String streamTitle = null;
+                try {
+                    List<User> users = twitchHelixClient.client.getUsers(
+                            null,
+                            null,
+                            Collections.singletonList(channelName)).execute().getUsers();
+                    String channelToString = users.get(0).toString();
+                    String userId = users.get(0).getId();
+                    logger.info("channelToString: " + channelToString);
+                    logger.info("channelUserID: " + userId);
+                    StreamList resultList = twitchHelixClient.client.getStreams(
+                            null,
+                            null,
+                            null,
+                            5,
+                            null,
+                            null,
+                            Collections.singletonList(userId),
+                            null).execute();
+
+                    List<Stream> listado = resultList.getStreams();
+                    logger.info("numero de streams: " + listado.size());
+                    listado.forEach(stream -> {
+                        logger.info("ID: " + stream.getId() + " - Title: " + stream.getTitle());
+                    });
+                    if(listado.size()>0){
+                        streamTitle = listado.get(0).getTitle();
+                    }else {
+                        streamTitle = "Sin titulo disponible";
+                    }
+
+                    VideoList resultVideoList = twitchHelixClient.client.getVideos(
+                            null,
+                            null,
+                            userId,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            5,
+                            null,
+                            null).execute();
+
+                    resultVideoList.getVideos().forEach(video -> {
+                        logger.info(video.getId() + ": " + video.getTitle() + " - by: " + video.getUserName());
+                    });
+                    List<Video> listadoVideos = resultVideoList.getVideos();
+                    logger.info("numero de videos: " + listadoVideos.size());
+                    if (listadoVideos.size()>0 && streamTitle.equals("Sin titulo disponible")){
+                        streamTitle = listadoVideos.get(0).getTitle();
+                    }
+
+
+                }catch (Exception e){
+                    logger.error("Petando en la petición Helix");
+                    logger.error(e.getMessage());
+                }
+                if (streamTitle != null && !streamTitle.equals(""))
                 bot.sendMessage(channel,"Echale un vistazo al canal de https://twitch.tv/"+channelName
-                        // + ". El último video fue sobre: {video.title}"
+                        + ". El último video fue sobre: " + streamTitle
                 );
             }
         }
