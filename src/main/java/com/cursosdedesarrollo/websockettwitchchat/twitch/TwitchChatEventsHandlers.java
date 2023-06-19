@@ -4,12 +4,10 @@ package com.cursosdedesarrollo.websockettwitchchat.twitch;
 import com.cursosdedesarrollo.websockettwitchchat.websocket.MyWebSocketHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.helix.domain.*;
-import feign.Param;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -55,7 +53,7 @@ public class TwitchChatEventsHandlers {
             if (message.startsWith("!github")){
                 bot.sendMessage(channel,"El perfil de github es: https://github.com/pepesan");
             }
-            if (message.startsWith("!github")){
+            if (message.startsWith("!discord")){
                 bot.sendMessage(channel,"El servidor de discord está en: https://discord.gg/9eWkvyR");
             }
             if (message.startsWith("!so")){
