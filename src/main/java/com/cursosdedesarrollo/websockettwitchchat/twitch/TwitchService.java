@@ -14,4 +14,13 @@ public class TwitchService {
         twitchChatClient.connectAndJoinChannel(channel);
         twitchChatClient.sendMessage(channel,"Bot activado!");
     }
+
+    public TwitchChatClient getTwitchChatClient() {
+        return twitchChatClient;
+    }
+
+
+    public void setTwitchChatClient(TwitchChatClient twitchChatClient) {
+        this.twitchChatClient = twitchChatClient;
+    }
 }

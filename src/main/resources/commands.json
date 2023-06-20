@@ -1,0 +1,10 @@
+{
+  "command_symbol": "!",
+  "commands": [
+    {
+      "name": "help",
+      "output_text": "Ayuda",
+      "owner_only": true
+    }
+  ]
+}
