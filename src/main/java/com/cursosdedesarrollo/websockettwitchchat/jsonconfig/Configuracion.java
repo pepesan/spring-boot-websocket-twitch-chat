@@ -22,6 +22,7 @@ public class Configuracion {
            command.setName(commandJSON.getString("name"));
            command.setOutputText(commandJSON.getString("output_text"));
            command.setOwnerOnly(commandJSON.getBoolean("owner_only"));
+           command.setOnlyMods(commandJSON.getBoolean("only_mods"));
            this.commands.add(command);
         }
     }

@@ -1,6 +1,8 @@
 package com.cursosdedesarrollo.websockettwitchchat.twitch;
 
 
+import com.cursosdedesarrollo.websockettwitchchat.jsonconfig.Command;
+import com.cursosdedesarrollo.websockettwitchchat.jsonconfig.JsonConfigService;
 import com.cursosdedesarrollo.websockettwitchchat.websocket.MyWebSocketHandler;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.helix.domain.*;
@@ -17,12 +19,24 @@ public class TwitchChatEventsHandlers {
     @Autowired
     private TwitchHelixClient twitchHelixClient;
 
+    @Autowired
+    private JsonConfigService configuracionService;
+
     private static final Logger logger = LoggerFactory.getLogger(TwitchChatEventsHandlers.class);
     public void executeCommands(ChannelMessageEvent event, TwitchChatClient bot, String channel, MyWebSocketHandler myWebSocketHandler) {
         // System.out.println "[" + event.getChannel().getName() + "]["+event.getPermissions().toString()+"] " + event.getUser().getName() + ": " + event.getMessage());
         if (event.getUser().getName().equals(channel)){
             logger.info("Channel Owner Message");
             String message = event.getMessage();
+            String commandSymbol = this.configuracionService.getConfiguracion().getCommandSymbol();
+            List<Command> commandList  = this.configuracionService.getConfiguracion().getCommands();
+            if (message.startsWith(commandSymbol)){
+                logger.info("es un comando");
+                // pillar el comando desde el texto del mensaje
+                String commandName = message;
+                // buscar el comando en el listado
+                // ejecutar el comando
+            }
             if (message.startsWith("!help")){
                 bot.sendMessage(channel,"Ayuda: puedes usar los comandos: !youtube !redes !java !javaweb !angular !github !discord");
             }

@@ -7,4 +7,5 @@ public class Command {
     private String name;
     private String outputText;
     private Boolean ownerOnly;
+    private Boolean onlyMods;
 }

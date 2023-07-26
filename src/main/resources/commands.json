@@ -4,7 +4,8 @@
     {
       "name": "help",
       "output_text": "Ayuda",
-      "owner_only": true
+      "owner_only": true,
+      "only_mods": true
     }
   ]
 }
