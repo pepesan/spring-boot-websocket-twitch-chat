@@ -10,6 +10,13 @@ public class TwitchHelixClient {
 
     public TwitchHelix client;
 
+    public String channelName;
+
+    public String accessToken;
+
+    public String oauthToken;
+
+
     TwitchHelixClient(@Value("${twitch.clientId}") String clientId,
                       @Value("${twitch.clientSecret}") String clientSecret,
                       @Value("${twitch.accessToken}") String accessToken,
@@ -19,5 +26,9 @@ public class TwitchHelixClient {
                 .withClientId(clientId)
                 .withClientSecret(clientSecret)
                 .build();
+
+        this.channelName = channel;
+        this.accessToken = accessToken;
+        this.oauthToken = oauthToken;
     }
 }

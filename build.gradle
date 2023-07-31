@@ -31,6 +31,8 @@ dependencies {
     implementation group: 'com.github.philippheuer.credentialmanager', name: 'credentialmanager', version: '0.2.2'
     // https://mvnrepository.com/artifact/com.github.twitch4j/twitch4j-client-websocket
     implementation group: 'com.github.twitch4j', name: 'twitch4j-client-websocket', version: '1.15.0'
+    // logback
+    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.3.5'
 // https://mvnrepository.com/artifact/com.h2database/h2
     implementation 'com.h2database:h2:2.2.220'
 
