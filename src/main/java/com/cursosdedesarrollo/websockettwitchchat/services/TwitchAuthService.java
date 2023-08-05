@@ -1,7 +1,6 @@
 package com.cursosdedesarrollo.websockettwitchchat.services;
 
 import com.cursosdedesarrollo.websockettwitchchat.domain.TwitchConfig;
-import com.cursosdedesarrollo.websockettwitchchat.twitch.TwitchChatClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

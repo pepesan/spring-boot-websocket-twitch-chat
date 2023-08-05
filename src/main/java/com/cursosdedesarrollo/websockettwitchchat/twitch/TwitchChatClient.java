@@ -7,21 +7,28 @@ import com.cursosdedesarrollo.websockettwitchchat.websocket.MyWebSocketHandler;
 import com.github.philippheuer.credentialmanager.CredentialManager;
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
+import com.github.twitch4j.chat.events.channel.*;
+import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
 import com.github.twitch4j.helix.domain.*;
 import com.github.twitch4j.pubsub.events.ChannelBitsEvent;
+import com.github.twitch4j.pubsub.events.ChannelPointsRedemptionEvent;
+import com.github.twitch4j.pubsub.events.ChannelSubGiftEvent;
+import com.github.twitch4j.pubsub.events.CharityCampaignDonationEvent;
+import com.github.twitch4j.pubsub.events.CheerbombEvent;
+import com.github.twitch4j.pubsub.events.FollowingEvent;
+import com.github.twitch4j.pubsub.events.LowTrustUserNewMessageEvent;
+import com.github.twitch4j.pubsub.events.PubSubConnectionStateEvent;
+import com.github.twitch4j.pubsub.events.PointsSpentEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.api.domain.IDisposable;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
-import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -55,9 +62,9 @@ public class TwitchChatClient {
 
     public void connect() {
 
-        CredentialManager credentialManager = CredentialManagerBuilder.builder()
-                .build();
-        credentialManager.registerIdentityProvider(new TwitchIdentityProvider(this.twitchConfig.getClientId(), this.twitchConfig.getClientSecret(), this.twitchConfig.getRedirectUri()));
+//        CredentialManager credentialManager = CredentialManagerBuilder.builder()
+//                .build();
+//        credentialManager.registerIdentityProvider(new TwitchIdentityProvider(this.twitchConfig.getClientId(), this.twitchConfig.getClientSecret(), this.twitchConfig.getRedirectUri()));
         oAuth2Credential = new OAuth2Credential("twitch", this.twitchConfig.getOauthToken());
         twitchClient = TwitchClientBuilder.builder()
                 .withEnableHelix(true)
@@ -96,9 +103,73 @@ public class TwitchChatClient {
 
                         }
                 );
+        twitchClient.getEventManager().onEvent(RaidEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
         twitchClient.getEventManager().onEvent(ChannelBitsEvent.class,
                 event -> {
-
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(ChannelJoinEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(ChannelLeaveEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(ChannelModEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(ChannelNoticeEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(ChannelPointsRedemptionEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(ChannelMessageActionEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(ChannelSubGiftEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(ChannelSubscribeEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(CharityCampaignDonationEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(CheerbombEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(FollowingEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(LowTrustUserNewMessageEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(PubSubConnectionStateEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(PointsSpentEvent.class,
+                event -> {
+                    logger.info(event.toString());
+                });
+        twitchClient.getEventManager().onEvent(PointsSpentEvent.class,
+                event -> {
+                    logger.info(event.toString());
                 });
     }
 
