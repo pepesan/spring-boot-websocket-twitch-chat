@@ -3,9 +3,87 @@
   "commands": [
     {
       "name": "help",
-      "output_text": "Ayuda",
-      "owner_only": true,
-      "only_mods": true
+      "output_text": "Ayuda: puedes usar los comandos: !youtube !redes !java !javaweb !angular !github !discord",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "grabando",
+      "output_text": "Estamos grabando un curso para Youtube. Mientras tanto no podemos atender al chat. Cuando terminemos podemos atender tus preguntas.",
+      "owner_only": false,
+      "mods_only": true,
+      "output_type" : "normal"
+    },
+    {
+      "name": "youtube",
+      "output_text": "El canal de Youtube es: https://www.youtube.com/@CursosdeDesarrollo , Canal secundario: https://www.youtube.com/@CursosDesencadenado",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "redes",
+      "output_text": "Enlaces de contacto: https://twitter.com/dvaquero , https://twitter.com/CDDesarrollo y https://www.linkedin.com/in/davidvaquero/",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "java",
+      "output_text": "Este es el enlace al curso de java en Youtube: https://www.youtube.com/watch?v=JExfQrDN03k&list=PLd7FFr2YzghOjHnoLF_yLjjOFnknA8qJj",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "javaweb",
+      "output_text": "Este es el enlace al curso de java Web en Youtube: https://www.youtube.com/playlist?list=PLd7FFr2YzghNRITcQTMsuW5puOPGH3-PV",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "typescript",
+      "output_text": "Este es el enlace al curso de Typescript en Youtube https://www.youtube.com/playlist?list=PLd7FFr2YzghNmAgEDpfZeWsb5DuiOLHbB  y el repositorio de código: https://github.com/pepesan/curso-typescript-twitch",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "angular",
+      "output_text": "Este es el enlace al curso de angular en Youtube: https://www.youtube.com/watch?v=UGBWmShB4J8&list=PLd7FFr2YzghNPi66KMyBbrBmJzH-RPYz0",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "ansible",
+      "output_text": "Este es el enlace al curso de ansible en Youtube: https://www.youtube.com/watch?v=aYfqoh1PhBk&list=PLd7FFr2YzghNETVzT99w0hiWUDRNsqkq6",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "github",
+      "output_text": "El perfil de github es: https://github.com/pepesan",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "discord",
+      "output_text": "El servidor de discord está en: https://discord.gg/9eWkvyR",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    }
+  ],
+  "scopes": [
+    {
+      "name": "",
+      "description": "",
+      "nameBase64": ""
     }
   ]
 }

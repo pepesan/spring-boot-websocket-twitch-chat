@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Twitch Login</title>
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Inicio de sesión con Twitch</h1>
+        <button id="loginButton" onclick="redirectToTwitchLogin()">Iniciar sesión con Twitch</button>
+    </div>
+
+    <script>
+        function redirectToTwitchLogin() {
+            // Reemplaza <YOUR_CLIENT_ID> con el ID de cliente de tu aplicación Twitch
+            const clientId = "pr9wl8yx3c5fqqn9vgr18afiw5o5ob";
+
+            // Reemplaza <YOUR_REDIRECT_URI> con la URL de tu callback (http://localhost:8080/callback)
+            const redirectUri = "http://localhost:8080/callback";
+
+            // Reemplaza <YOUR_SCOPES> con los alcances que necesites, separados por espacios
+            let scopes = "channel:read:subscriptions";
+            scopes += "+channel:read:goals";
+            scopes += "+channel:read:guest_star";
+            scopes += "+channel:read:polls";
+            scopes += "+channel:read:predictions";
+            scopes += "+channel:read:redemptions";
+            scopes += "+channel:read:subscriptions";
+            scopes += "+channel:read:vips";
+            scopes += "+channel:read:charity";
+            scopes += "+analytics:read:extensions";
+            scopes += "+analytics:read:games";
+            scopes += "+bits:read";
+            scopes += "+moderation:read";
+            scopes += "+moderator:manage:shoutouts";
+            scopes += "+channel:moderate";
+            scopes += "+chat:edit";
+            scopes += "+chat:read";
+            scopes += "+whispers:read";
+            scopes += "+whispers:edit";
+
+            const state = "c3ab8aa609ea11e793ae92361f002671"
+
+            // Redirige al inicio de sesión de Twitch con los parámetros necesarios
+            window.location.href = `https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scopes}&state=${state}`;
+        }
+    </script>
+</body>
+</html>

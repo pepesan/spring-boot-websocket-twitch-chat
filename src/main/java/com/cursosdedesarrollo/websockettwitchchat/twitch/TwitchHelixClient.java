@@ -1,34 +1,33 @@
 package com.cursosdedesarrollo.websockettwitchchat.twitch;
 
+import com.cursosdedesarrollo.websockettwitchchat.domain.TwitchConfig;
 import com.github.twitch4j.helix.TwitchHelix;
 import com.github.twitch4j.helix.TwitchHelixBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class TwitchHelixClient {
 
+    private static final Logger logger = LoggerFactory.getLogger(TwitchHelixClient.class);
+
+
     public TwitchHelix client;
 
-    public String channelName;
-
-    public String accessToken;
-
-    public String oauthToken;
+    @Autowired
+    private TwitchConfig twitchConfig;
 
 
-    TwitchHelixClient(@Value("${twitch.clientId}") String clientId,
-                      @Value("${twitch.clientSecret}") String clientSecret,
-                      @Value("${twitch.accessToken}") String accessToken,
-                      @Value("${twitch.oauthToken}") String oauthToken,
-                      @Value("${twitch.channel}") String channel){
+
+    public void connect(){
         client = TwitchHelixBuilder.builder()
-                .withClientId(clientId)
-                .withClientSecret(clientSecret)
+                .withClientId(this.twitchConfig.getClientId())
+                .withClientSecret(this.twitchConfig.getClientSecret())
                 .build();
-
-        this.channelName = channel;
-        this.accessToken = accessToken;
-        this.oauthToken = oauthToken;
+        logger.info("Bot Helix conectando");
     }
+
 }
