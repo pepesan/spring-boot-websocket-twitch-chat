@@ -69,12 +69,14 @@ public class CallBackController {
             logger.info("TwitchConfig: Access Code: " + this.twitchConfig.getAccessToken());
             this.twitchConfigRepository.save(this.twitchConfig);
             this.twitchConfig.setOauthToken(this.twitchService.getOauthToken());
-            logger.info("TwitchConfig: Oauth Code: " + this.twitchConfig.getAccessToken());
+            logger.info("TwitchConfig: Oauth Code: " + this.twitchConfig.getOauthToken());
             this.twitchConfigRepository.save(this.twitchConfig);
             this.twitchChatClient.connect();
             this.twitchHelixClient.connect();
+            //this.twitchChatClient.getChannelMods();
             this.twitchChatClient.connectAndJoinChannel();
             this.twitchChatClient.sendMessage("Bot activado!");
+            logger.info("CallbackController: mandando primer mensaje al chat");
         }catch (Exception e){
             logger.error("No se ha podido conseguir el código en el callback");
         }

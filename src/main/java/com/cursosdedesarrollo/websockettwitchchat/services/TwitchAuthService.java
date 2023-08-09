@@ -47,6 +47,7 @@ public class TwitchAuthService {
                 int startIdx = jsonResponse.indexOf("\"access_token\":") + "\"access_token\":".length() + 1;
                 int endIdx = jsonResponse.indexOf(",", startIdx);
                 String oauthToken = jsonResponse.substring(startIdx, endIdx - 1);
+                logger.info("TwitchAuthService: oauthToken: {}", oauthToken);
                 return oauthToken;
             } else {
                 // Si la respuesta no es exitosa (código 2xx), puedes obtener más detalles del error

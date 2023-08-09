@@ -23,6 +23,7 @@ public class MyWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         this.session = session;
+        logger.info("session iniciada");
         /*
         executorService.scheduleAtFixedRate(() -> {
             String randomMessage = generateRandomMessage();

@@ -6,6 +6,7 @@ import com.cursosdedesarrollo.websockettwitchchat.services.JsonConfigService;
 import com.cursosdedesarrollo.websockettwitchchat.websocket.MyWebSocketHandler;
 import com.github.philippheuer.credentialmanager.CredentialManager;
 import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
+import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
 import com.github.twitch4j.chat.events.channel.*;
 import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
@@ -30,7 +31,9 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class TwitchChatClient {
@@ -53,28 +56,48 @@ public class TwitchChatClient {
     private TwitchConfig twitchConfig;
     public OAuth2Credential oAuth2Credential;
 
-    public List<String> mods;
+    public Set<String> mods;
 
     TwitchChatClient(){
-        this.mods = List.of("cursosdedesarrollo","RonTxt", "SistemasItPro", "Lufegaba");
+        this.mods = Set.of("cursosdedesarrollo","RonTxt", "SistemasItPro", "lufegaba");
     }
 
 
     public void connect() {
-
 //        CredentialManager credentialManager = CredentialManagerBuilder.builder()
 //                .build();
 //        credentialManager.registerIdentityProvider(new TwitchIdentityProvider(this.twitchConfig.getClientId(), this.twitchConfig.getClientSecret(), this.twitchConfig.getRedirectUri()));
         oAuth2Credential = new OAuth2Credential("twitch", this.twitchConfig.getOauthToken());
+        logger.info("Bot Chat inicializando");
         twitchClient = TwitchClientBuilder.builder()
                 .withEnableHelix(true)
                 .withEnableChat(true)
                 .withEnableEventSocket(true)
                 .withEnablePubSub(true)
                 .withChatAccount(oAuth2Credential)
+                .withDefaultEventHandler(SimpleEventHandler.class)
                 //.withCredentialManager(credentialManager)
                 .build();
+        // pubsub
+        twitchClient.getPubSub().listenForFollowingEvents(oAuth2Credential, this.twitchConfig.getChannelId());
+        twitchClient.getPubSub().listenForCheerEvents(oAuth2Credential, this.twitchConfig.getChannelId());
+        twitchClient.getPubSub().listenForRaidEvents(oAuth2Credential, this.twitchConfig.getChannelId());
+        twitchClient.getPubSub().listenForChannelSubGiftsEvents(oAuth2Credential, this.twitchConfig.getChannelId());
+        twitchClient.getPubSub().listenForSubscriptionEvents(oAuth2Credential, this.twitchConfig.getChannelId());
+        //twitchClient.getPubSub().listenForUserChannelPointsEvents(oAuth2Credential, this.twitchConfig.getChannelId());
         logger.info("Bot Chat conectando");
+    }
+    public void getChannelMods(){
+        this.mods = new HashSet<>();
+        List<Moderator> listMods = twitchClient
+                .getHelix()
+                .getModerators(this.twitchConfig.getOauthToken(), this.twitchConfig.getChannelId(), null, null, null)
+                .execute()
+                .getModerators();
+        for(Moderator mod : listMods){
+            this.mods.add(mod.getUserName());
+        }
+        logger.info("Mods: {}", this.mods);
     }
 
     public void connectAndJoinChannel() {
@@ -83,6 +106,7 @@ public class TwitchChatClient {
     }
 
     public void registerEvents(){
+        logger.info("Registrando eventos");
         handlerOnMessage = twitchClient
                 .getEventManager()
                 .onEvent(
@@ -174,6 +198,7 @@ public class TwitchChatClient {
     }
 
     public void sendMessage(String message) {
+        logger.info("Mandando el primer mensaje al chat");
         twitchClient.getChat().sendMessage(this.twitchConfig.getChannel(), message);
     }
 
@@ -241,6 +266,9 @@ public class TwitchChatClient {
                         }
 
                     }
+                }
+                if (message.startsWith("!mods")){
+                    this.getChannelMods();
                 }
                 if (message.startsWith("!so")){
                     String channelName = message.substring(4);
