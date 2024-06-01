@@ -11,6 +11,4 @@ public class WebsocketTwitchChatApplication {
         SpringApplication.run(WebsocketTwitchChatApplication.class, args);
     }
 
-
-
 }

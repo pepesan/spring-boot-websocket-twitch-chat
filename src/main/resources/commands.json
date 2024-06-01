@@ -3,7 +3,7 @@
   "commands": [
     {
       "name": "help",
-      "output_text": "Ayuda: puedes usar los comandos: !youtube !redes !java !javaweb !angular !github !discord",
+      "output_text": "Ayuda: puedes usar los comandos: !youtube !redes !java !javaweb !angular !github !discord !kotlin !ansible !setup",
       "owner_only": false,
       "mods_only": false,
       "output_type" : "normal"
@@ -26,54 +26,68 @@
       "name": "redes",
       "output_text": "Enlaces de contacto: https://twitter.com/dvaquero , https://twitter.com/CDDesarrollo y https://www.linkedin.com/in/davidvaquero/",
       "owner_only": false,
-      "mods_only": false,
+      "mods_only": true,
       "output_type" : "normal"
     },
     {
       "name": "java",
       "output_text": "Este es el enlace al curso de java en Youtube: https://www.youtube.com/watch?v=JExfQrDN03k&list=PLd7FFr2YzghOjHnoLF_yLjjOFnknA8qJj",
       "owner_only": false,
-      "mods_only": false,
+      "mods_only": true,
       "output_type" : "normal"
     },
     {
       "name": "javaweb",
       "output_text": "Este es el enlace al curso de java Web en Youtube: https://www.youtube.com/playlist?list=PLd7FFr2YzghNRITcQTMsuW5puOPGH3-PV",
       "owner_only": false,
-      "mods_only": false,
+      "mods_only": true,
       "output_type" : "normal"
     },
     {
       "name": "typescript",
       "output_text": "Este es el enlace al curso de Typescript en Youtube https://www.youtube.com/playlist?list=PLd7FFr2YzghNmAgEDpfZeWsb5DuiOLHbB  y el repositorio de código: https://github.com/pepesan/curso-typescript-twitch",
       "owner_only": false,
-      "mods_only": false,
+      "mods_only": true,
       "output_type" : "normal"
     },
     {
       "name": "angular",
       "output_text": "Este es el enlace al curso de angular en Youtube: https://www.youtube.com/watch?v=UGBWmShB4J8&list=PLd7FFr2YzghNPi66KMyBbrBmJzH-RPYz0",
       "owner_only": false,
-      "mods_only": false,
+      "mods_only": true,
       "output_type" : "normal"
     },
     {
       "name": "ansible",
       "output_text": "Este es el enlace al curso de ansible en Youtube: https://www.youtube.com/watch?v=aYfqoh1PhBk&list=PLd7FFr2YzghNETVzT99w0hiWUDRNsqkq6",
       "owner_only": false,
-      "mods_only": false,
+      "mods_only": true,
       "output_type" : "normal"
     },
     {
       "name": "github",
       "output_text": "El perfil de github es: https://github.com/pepesan",
       "owner_only": false,
-      "mods_only": false,
+      "mods_only": true,
       "output_type" : "normal"
     },
     {
       "name": "discord",
-      "output_text": "El servidor de discord está en: https://discord.gg/9eWkvyR",
+      "output_text": "El servidor de discord está en: https://discord.gg/7CfGunwzgM",
+      "owner_only": false,
+      "mods_only": true,
+      "output_type" : "normal"
+    },
+    {
+      "name": "setup",
+      "output_text": "La máquina de emisiónm desarrollo y pruebas es: Gigabyte WRX80-SU8-IPMI, AMD RYZEN™ THREADRIPPER™ PRO 3955WX, 128GB RAM, RTX4080, Samsung NVME M.2 SSD 970 EVO Plus 1TB, Monitores 2: LG 4K y Dell 27 1440p \"",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "kotlin",
+      "output_text": "Este es el enlace al curso de kotlin en Youtube: https://www.youtube.com/playlist?list=PLd7FFr2YzghP_9SFS19Uvov2dMb710FtJ",
       "owner_only": false,
       "mods_only": false,
       "output_type" : "normal"

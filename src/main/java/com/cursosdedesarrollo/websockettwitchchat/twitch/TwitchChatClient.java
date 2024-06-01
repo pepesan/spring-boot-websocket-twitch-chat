@@ -34,6 +34,9 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.Duration;
 
 @Component
 public class TwitchChatClient {
@@ -47,6 +50,8 @@ public class TwitchChatClient {
     public TwitchClient twitchClient;
     private static final Logger logger = LoggerFactory.getLogger(TwitchChatClient.class);
 
+    private Date fechaHoraInicio;
+
 
     @Autowired
     private MyWebSocketHandler myWebSocketHandler;
@@ -58,8 +63,42 @@ public class TwitchChatClient {
 
     public Set<String> mods;
 
+    public
+
     TwitchChatClient(){
-        this.mods = Set.of("cursosdedesarrollo","RonTxt", "SistemasItPro", "lufegaba");
+        this.mods = Set.of("cursosdedesarrollo","RonTxT", "SistemasItPro", "lufegaba");
+        this.fechaHoraInicio = obtenerFechaHoraInicial();
+    }
+
+    public static Date obtenerFechaHoraInicial() {
+        return new Date(); // Esto obtendrá la fecha y hora actual
+    }
+
+    // Función para calcular el tiempo transcurrido desde la fecha y hora inicial
+    public String calcularTiempoTranscurrido() {
+        Date fechaHoraActual = new Date(); // Obtener la fecha y hora actual
+        long tiempoTranscurridoMillis = fechaHoraActual.getTime() - this.fechaHoraInicio.getTime();
+
+        // Convertir los milisegundos a segundos, minutos, horas y días
+        long segundos = tiempoTranscurridoMillis / 1000;
+        long minutos = segundos / 60;
+        long horas = minutos / 60;
+        long dias = horas / 24;
+        StringBuffer sb = new StringBuffer();
+        sb.append("Tiempo de stream: ");
+        if (dias>0) {
+            sb.append("Días: ").append(dias).append(", ");
+        }
+        if (horas>0) {
+            sb.append("Horas: ").append(horas % 24).append(", ");
+        }
+        if (minutos>0) {
+            sb.append("Minutos: ").append(minutos % 60).append(", ");
+        }
+        if (segundos>0) {
+            sb.append("Segundos: ").append(segundos % 60).append(".");
+        }
+        return sb.toString();
     }
 
 
@@ -240,7 +279,7 @@ public class TwitchChatClient {
 
                     }
                 }else{
-                    logger.info("No hay comando en el json o ls BBDD");
+                    logger.info("No hay comando en el json o la BBDD");
                 }
             }
             if(event.getUser().getName().equals(this.twitchConfig.getChannel()) || this.mods.contains(event.getUser().getName())){
@@ -270,6 +309,10 @@ public class TwitchChatClient {
                 if (message.startsWith("!mods")){
                     this.getChannelMods();
                 }
+                if (message.startsWith("!uptime")){
+                    this.sendMessage(calcularTiempoTranscurrido());
+                }
+
                 if (message.startsWith("!so")){
                     String channelName = message.substring(4);
                     String streamTitle = null;
@@ -337,7 +380,7 @@ public class TwitchChatClient {
                     }
                     if (streamTitle != null && !streamTitle.equals("")){
                         String cadenaSalida = "Echale un vistazo al canal de https://twitch.tv/"+channelName
-                                + ". El último video fue sobre: " + streamTitle ;
+                                + " . El último video fue sobre: " + streamTitle ;
                         if (categoryName!= null & !categoryName.equals("Sin Categoría Disponible")){
                             cadenaSalida+= " y suele streamear en la categoría: " + categoryName;
                         }

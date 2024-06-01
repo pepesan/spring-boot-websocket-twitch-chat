@@ -64,7 +64,7 @@ h1 {
 
 .card__title {
     font-family: 'Courier New', monospace;
-    font-size: 18px;
+    font-size: 32px;
     text-decoration: underline;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -74,7 +74,7 @@ h1 {
 
 .card__content {
     font-family: 'Courier New', monospace;
-    font-size: 16px;
+    font-size: 28px;
     color: #333333;
     padding: 10px 10px 5px;
 }

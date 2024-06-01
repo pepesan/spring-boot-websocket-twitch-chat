@@ -1,9 +1,6 @@
 package com.cursosdedesarrollo.websockettwitchchat.domain.twitch;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.Instant;
@@ -15,10 +12,11 @@ import java.time.Instant;
 
 @Data
 @Entity
+@Table(name = "twitch_user")
 public class User{
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     /** User’s login name. */

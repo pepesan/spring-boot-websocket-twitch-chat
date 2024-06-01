@@ -1,7 +1,6 @@
 package com.cursosdedesarrollo.websockettwitchchat.domain;
 
 import lombok.Data;
-
 @Data
 public class Scope {
     private String name;
