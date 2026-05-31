@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.4'
+    id 'org.springframework.boot' version '3.5.10'
     id 'io.spring.dependency-management' version '1.1.4'
 }
 
@@ -8,7 +8,7 @@ group = 'com.cursosdedesarrollo'
 version = '0.0.1-SNAPSHOT'
 
 java {
-    sourceCompatibility = '17'
+    sourceCompatibility = '21'
 }
 
 configurations {
@@ -23,7 +23,10 @@ repositories {
 
 dependencies {
     // https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-data-jpa
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.2'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.1'
+    // https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.0")
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
     implementation 'org.springframework.boot:spring-boot-starter-data-rest'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
@@ -55,11 +58,12 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
     // carga de configuraciones por fichero json
-    implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
-    implementation group: 'org.json', name: 'json', version: '20230227'
+    implementation group: 'commons-io', name: 'commons-io', version: '2.14.0'
+    implementation group: 'org.json', name: 'json', version: '20231013'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.testcontainers:junit-jupiter'
+    implementation("org.jboss.logging:jboss-logging")
 }
 
 tasks.named('test') {
