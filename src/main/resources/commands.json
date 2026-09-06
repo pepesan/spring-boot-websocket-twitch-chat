@@ -112,6 +112,20 @@
       "owner_only": false,
       "mods_only": false,
       "output_type" : "normal"
+    },
+    {
+      "name": "kubernetes",
+      "output_text": "Este es el enlace al curso de Kubernetes en Youtube: https://www.youtube.com/playlist?list=PLWaCbw_Bs0qQ",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
+    },
+    {
+      "name": "k8s",
+      "output_text": "Este es el enlace al curso de Kubernetes en Youtube: https://www.youtube.com/playlist?list=PLWaCbw_Bs0qQ",
+      "owner_only": false,
+      "mods_only": false,
+      "output_type" : "normal"
     }
   ],
   "scopes": [
