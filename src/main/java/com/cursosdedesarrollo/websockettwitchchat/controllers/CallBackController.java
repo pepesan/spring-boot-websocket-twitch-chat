@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -43,6 +44,9 @@ public class CallBackController {
     private final ChannelAuthorizationService authorizationService;
     private final ChannelConnectorRegistry connectorRegistry;
     private final Clock clock;
+    @Value("${frontend.public-url:http://localhost:8080}")
+    private String frontendPublicUrl = "http://localhost:8080";
+
 
     @Autowired
     public CallBackController(
@@ -121,7 +125,10 @@ public class CallBackController {
             OAuthTokenResponse token = provider.exchangeAuthorizationCode(code);
             ChannelAuthorization authorization = authorizationService.authorize(provider, token);
             connector.connect(authorization);
-            return ResponseEntity.ok("Canal " + authorization.login() + " autorizado y conectado.");
+            String separator = frontendPublicUrl.endsWith("/") ? "" : "/";
+            return ResponseEntity.status(HttpStatus.SEE_OTHER)
+                    .location(java.net.URI.create(frontendPublicUrl + separator + "?twitch=connected"))
+                    .build();
         } catch (Exception exception) {
             logger.error("OAuth callback for provider {} failed ({})", providerId, exception.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)

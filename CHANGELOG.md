@@ -8,7 +8,7 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 - La configuración `commands.json` se lee al iniciar; los comandos se insertan o actualizan en el repositorio JPA por nombre.
 - Comandos configurables con texto/tipo de salida y reglas de owner/moderador; hay además lógica para comandos como uptime, moderadores, suscripciones y shoutout.
 - Consulta de datos de Twitch mediante Helix.
-- Interfaz estática que recibe mensajes del chat desde un WebSocket del backend.
+- La interfaz estática original recibe mensajes del chat desde un WebSocket del backend; ahora también existe el frontend Vue en desarrollo.
 - Persistencia original H2 en memoria y configuración de Twitch global, no por canal.
 - El código aún contenía llamadas a Twitch PubSub; Twitch lo retiró el 14-04-2025, por lo que esas suscripciones de eventos no son funcionales y están pendientes de migración a EventSub.
 
@@ -60,11 +60,21 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 - Sustituidas las suscripciones PubSub por EventSub WebSocket para follows, cheers, raids, suscripciones, regalos y mensajes de suscripción; cada condición usa el ID estable del canal autorizado.
 - Pruebas unitarias verifican siete registros, direcciones de raid y rechazo de autorizaciones de otros proveedores. No se realizó una conexión autenticada real a Twitch.
 
+
+### Frontend inicial — 2026-11-08
+
+- Añadido `frontend/` con Vue 3, Pinia, Vuetify, Vue Router y Vue I18n; idioma inglés/español y tema claro/oscuro persistidos localmente. El frontend no guarda tokens ni secretos.
+- El dashboard ofrece el inicio del OAuth Twitch ya implementado. Tras el callback correcto, el backend redirige al frontend local y muestra confirmación.
+- `/chat` consume el WebSocket existente y presenta estado y mensajes de solo lectura, escapados mediante interpolación de Vue. El backend serializa los mensajes con Jackson y los difunde a todas las sesiones activas, para que el panel y OBS puedan conectarse a la vez.
+- `/embed/chat` es una vista local transparente para fuente de navegador OBS, en `http://localhost:5173/embed/chat`. El WebSocket sigue sin autenticación y la vista no tiene acceso revocable: no exponer el servicio a Internet.
+- El servidor Vite queda limitado a localhost y proxifica OAuth/WebSocket; el perfil `development` permite el origen local y devuelve el callback al frontend.
+- Verificación: suite Gradle completa, `npm run build`, 3 pruebas unitarias frontend, 4 escenarios/22 pasos Cucumber E2E, `npm audit` sin vulnerabilidades; smoke local confirmó WebSocket conectado y el inicio OAuth respondió HTTP 302 sin seguir el redirect. No se autorizó Twitch ni se enviaron mensajes.
+- La prueba de arranque usó SQLite temporal en el puerto 18080; el puerto 8080 estaba ocupado y no se detuvo ni modificó el proceso existente.
 ### Limitaciones aún abiertas
 
 - La revocación explícita desde la interfaz aún no está implementada; un refresh token inválido sí marca el canal para volver a autorizarlo.
 - Solo está implementado el adaptador Twitch; no hay adaptador YouTube ni de otras plataformas.
-- La interfaz para gestionar varios canales y comandos, onboarding guiado, Vue, chat unificado/fuentes OBS y despliegue/instalador Linux siguen pendientes. El runtime ya mantiene conexiones Twitch aisladas por canal.
+- Pendientes: onboarding visual completo, gestión de creadores/canales, comandos por canal y edición online, `!pole`, preguntas y su presentación. El overlay base existe solo en desarrollo; faltan control de acceso revocable y personalización visual. No se ha hecho un consentimiento Twitch real.
 
 ## Registro de siguientes cambios
 

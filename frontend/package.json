@@ -1,0 +1,33 @@
+{
+  "name": "twitch-chat-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host localhost",
+    "build": "vue-tsc --noEmit && vite build",
+    "unit": "vitest run",
+    "e2e": "start-server-and-test 'vite --host localhost' http://localhost:5173 'cucumber-js --require-module tsx --require e2e/steps/**/*.ts e2e/features/**/*.feature'"
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "pinia": "^4.1.0",
+    "vue": "^3.5.45",
+    "vue-i18n": "^11.4.18",
+    "vue-router": "^5.4.0",
+    "vuetify": "^4.3.2"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^13.3.0",
+    "@types/node": "^24.10.1",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "jsdom": "^31.0.0",
+    "playwright": "^1.65.0",
+    "start-server-and-test": "^3.0.13",
+    "tsx": "^4.23.15",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0",
+    "vue-tsc": "^3.3.14"
+  }
+}

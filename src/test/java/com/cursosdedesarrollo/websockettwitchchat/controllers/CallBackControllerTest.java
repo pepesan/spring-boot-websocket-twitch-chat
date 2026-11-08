@@ -114,7 +114,8 @@ class CallBackControllerTest {
         ResponseEntity<String> response = controller.handleCallback(
                 "twitch", "single-use-code", "valid-state", null, request);
 
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(HttpStatus.SEE_OTHER, response.getStatusCode());
+        assertEquals(URI.create("http://localhost:8080/?twitch=connected"), response.getHeaders().getLocation());
         verify(provider).exchangeAuthorizationCode("single-use-code");
         verify(authorizationService).authorize(provider, token);
         verify(connector).connect(authorization);

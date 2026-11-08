@@ -1,5 +1,7 @@
 package com.cursosdedesarrollo.websockettwitchchat.websocket;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.twitch4j.chat.events.channel.ChannelMessageEvent;
 import com.github.twitch4j.common.events.domain.EventUser;
 import org.slf4j.Logger;
@@ -8,82 +10,72 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
-import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class MyWebSocketHandler extends TextWebSocketHandler {
-    private final Logger logger = LoggerFactory.getLogger(MyWebSocketHandler.class);
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    private WebSocketSession session;
+    private static final Logger logger = LoggerFactory.getLogger(MyWebSocketHandler.class);
+    private static final ObjectMapper JSON = new ObjectMapper();
+    private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+
     @Override
-    public void afterConnectionEstablished(WebSocketSession session) throws Exception {
-        this.session = session;
-        logger.info("session iniciada");
-        /*
-        executorService.scheduleAtFixedRate(() -> {
-            String randomMessage = generateRandomMessage();
-            logger.info("Sending message to client: {}", randomMessage);
-            try {
-
-                session.sendMessage(new TextMessage(randomMessage));
-            } catch (IOException e) {
-                logger.error("Error sending message to client", e);
-            }
-        }, 0, 1, TimeUnit.SECONDS);
-
-         */
+    public void afterConnectionEstablished(WebSocketSession session) {
+        WebSocketSession safeSession = new ConcurrentWebSocketSessionDecorator(session, 10_000, 1_048_576);
+        sessions.put(session.getId(), safeSession);
+        logger.debug("WebSocket client {} connected", session.getId());
     }
 
     @Override
-    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
-        logger.info("cerrando conexión a websocket client");
-        // executorService.shutdown();
+    public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        sessions.remove(session.getId());
+        logger.debug("WebSocket client {} disconnected", session.getId());
     }
 
     @Override
-    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        // Manejar el mensaje recibido desde el cliente
-        String receivedMessage = message.getPayload();
-        logger.info("Received message from client: {}", receivedMessage);
+    protected void handleTextMessage(WebSocketSession session, TextMessage message) throws IOException {
+        session.close(CloseStatus.NOT_ACCEPTABLE);
     }
 
     public void sendMessage(ChannelMessageEvent event) throws IOException {
-        // logger.info("[" + event.getChannel().getName() + "]["+event.getPermissions().toString()+"] " + event.getUser().getName() + ": " + event.getMessage());
-        logger.info("mandando mensaje a websocket");
+        if (sessions.isEmpty()) {
+            return;
+        }
+
         EventUser user = event.getUser();
-        boolean firstMessage = event.isDesignatedFirstMessage();
+        String payload;
         try {
-            mandaMensajeJson(event, user, firstMessage);
-        }catch (IOException e){
-            logger.error("no se ha podido mandar el mensaje vía Websocket");
+            payload = JSON.writeValueAsString(new ChatMessage(
+                    user.getName(),
+                    String.valueOf(user.getId()),
+                    event.isDesignatedFirstMessage(),
+                    event.getMessage()));
+        } catch (JsonProcessingException exception) {
+            logger.warn("Could not serialize Twitch chat message ({})", exception.getClass().getSimpleName());
+            return;
+        }
+
+        TextMessage outgoing = new TextMessage(payload);
+        for (Map.Entry<String, WebSocketSession> entry : sessions.entrySet()) {
+            WebSocketSession session = entry.getValue();
+            if (!session.isOpen()) {
+                sessions.remove(entry.getKey(), session);
+                continue;
+            }
+            try {
+                session.sendMessage(outgoing);
+            } catch (IOException exception) {
+                sessions.remove(entry.getKey(), session);
+                logger.debug("Removing WebSocket client {} after send failure ({})",
+                        entry.getKey(), exception.getClass().getSimpleName());
+            }
         }
     }
 
-    private void mandaMensajeJson(ChannelMessageEvent event, EventUser user, boolean firstMessage) throws IOException {
-        try {
-            this.session.sendMessage(new TextMessage(
-                    "{" +
-                            "\"username\": \""+ user.getName()+ "\", "+
-                            "\"userId\": \""+ user.getId()+ "\", "+
-                            "\"firstMessage\": "+ firstMessage + ", "+
-                            "\"message\": \""+ event.getMessage()+ "\""+
-                            "}"
-            ));
-        }catch (IOException e){
-            logger.error("fallo al mandar al cliente websocket");
-        }
-
-    }
-
-    private String generateRandomMessage() {
-        // Generar un mensaje aleatorio
-        Random random = new Random();
-        int randomNumber = random.nextInt(100);
-        return "Random number: " + randomNumber;
+    private record ChatMessage(String username, String userId, boolean firstMessage, String message) {
     }
 }
