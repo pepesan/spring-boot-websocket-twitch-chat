@@ -1,6 +1,7 @@
 package com.cursosdedesarrollo.websockettwitchchat.repositories;
 
 import org.flywaydb.core.api.configuration.FluentConfiguration;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.flyway.autoconfigure.FlywayConfigurationCustomizer;
 import org.springframework.stereotype.Component;
@@ -26,7 +27,7 @@ public class SQLiteDatabaseFileSecurity implements FlywayConfigurationCustomizer
     }
 
     @Override
-    public void customize(FluentConfiguration configuration) {
+    public void customize(@NonNull FluentConfiguration configuration) {
         if (!jdbcUrl.startsWith("jdbc:sqlite:")) {
             throw new IllegalArgumentException("The application datasource must use SQLite");
         }
