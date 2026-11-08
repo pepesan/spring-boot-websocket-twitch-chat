@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
       host: 'localhost',
       proxy: {
         '/callback': { target: backend, changeOrigin: true },
+        '/account': { target: backend, changeOrigin: true },
         '/websocket': { target: backend, ws: true, changeOrigin: true },
       },
     },

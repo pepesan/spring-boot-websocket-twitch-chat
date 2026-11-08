@@ -373,3 +373,92 @@ body:has(.overlay-app) {
     padding: 1rem;
   }
 }
+
+.auth-panel {
+  max-width: 800px;
+  margin: 1rem auto;
+  padding: 3rem;
+  border: 1px solid rgba(150, 155, 180, .14);
+  border-radius: 20px;
+  background: rgb(var(--v-theme-surface));
+}
+
+.auth-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin-bottom: 1.5rem;
+}
+
+.auth-steps span {
+  padding: .5rem .75rem;
+  border: 1px solid rgba(150, 155, 180, .2);
+  border-radius: 99px;
+  color: rgba(var(--v-theme-on-background), .62);
+  font-size: .82rem;
+}
+
+.auth-steps .active,
+.auth-steps .complete {
+  border-color: rgba(var(--v-theme-primary), .45);
+  color: rgb(var(--v-theme-primary));
+}
+
+.auth-form {
+  display: grid;
+  max-width: 520px;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.auth-field {
+  display: grid;
+  gap: .45rem;
+  font-size: .9rem;
+  font-weight: 600;
+}
+
+.auth-field input {
+  width: 100%;
+  padding: .85rem 1rem;
+  border: 1px solid rgba(150, 155, 180, .3);
+  border-radius: 8px;
+  background: rgb(var(--v-theme-background));
+  color: rgb(var(--v-theme-on-background));
+  font: inherit;
+}
+
+.auth-field input:focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 2px;
+}
+
+.auth-switch {
+  justify-self: start;
+  padding: .25rem 0;
+  border: 0;
+  background: transparent;
+  color: rgb(var(--v-theme-primary));
+  cursor: pointer;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.auth-alert {
+  margin-top: 1rem;
+}
+
+.account-email {
+  max-width: 220px;
+  overflow: hidden;
+  color: rgba(var(--v-theme-on-background), .72);
+  font-size: .78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .auth-panel {
+    padding: 2rem 1.4rem;
+  }
+}

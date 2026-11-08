@@ -19,7 +19,12 @@ Feature: Frontend preferences and OBS overlay
     When I open the OBS overlay
     Then the local development overlay is shown
 
-  Scenario: Successful Twitch callback confirms the connection
+  Scenario: Register or sign in before connecting a platform
     Given the frontend dashboard is open
-    When I return after Twitch authorization
-    Then the dashboard confirms the Twitch connection
+    Then registration is required before Twitch can be connected
+
+
+  Scenario: Direct chat access returns anonymous users to account registration
+    Given the frontend dashboard is open
+    When I open the protected live chat directly
+    Then I am returned to account registration

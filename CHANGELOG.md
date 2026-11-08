@@ -64,12 +64,24 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 ### Frontend inicial — 2026-11-08
 
 - Añadido `frontend/` con Vue 3, Pinia, Vuetify, Vue Router y Vue I18n; idioma inglés/español y tema claro/oscuro persistidos localmente. El frontend no guarda tokens ni secretos.
-- El dashboard ofrece el inicio del OAuth Twitch ya implementado. Tras el callback correcto, el backend redirige al frontend local y muestra confirmación.
+- Tras iniciar sesión en la cuenta de creador, el dashboard permite iniciar el OAuth de Twitch. Tras el callback correcto, el backend redirige al frontend local y muestra confirmación.
 - `/chat` consume el WebSocket existente y presenta estado y mensajes de solo lectura, escapados mediante interpolación de Vue. El backend serializa los mensajes con Jackson y los difunde a todas las sesiones activas, para que el panel y OBS puedan conectarse a la vez.
 - `/embed/chat` es una vista local transparente para fuente de navegador OBS, en `http://localhost:5173/embed/chat`. El WebSocket sigue sin autenticación y la vista no tiene acceso revocable: no exponer el servicio a Internet.
-- El servidor Vite queda limitado a localhost y proxifica OAuth/WebSocket; el perfil `development` permite el origen local y devuelve el callback al frontend.
+- El servidor Vite queda limitado a localhost y proxifica las rutas de cuenta, OAuth y WebSocket; el perfil `development` permite el origen local y devuelve el callback al frontend.
 - Verificación: suite Gradle completa, `npm run build`, 3 pruebas unitarias frontend, 4 escenarios/22 pasos Cucumber E2E, `npm audit` sin vulnerabilidades; smoke local confirmó WebSocket conectado y el inicio OAuth respondió HTTP 302 sin seguir el redirect. No se autorizó Twitch ni se enviaron mensajes.
 - La prueba de arranque usó SQLite temporal en el puerto 18080; el puerto 8080 estaba ocupado y no se detuvo ni modificó el proceso existente.
+
+### Registro de cuenta antes de Twitch — 2026-11-08
+
+- El dashboard presenta primero el registro de cuenta (contraseña mínima de 12 caracteres), verificación de correo e inicio de sesión; no muestra el enlace para conectar Twitch hasta autenticar la cuenta.
+- El backend solo permite iniciar OAuth con una sesión de cuenta autenticada. El callback externo sigue siendo público y conserva la comprobación `state` de un solo uso vinculada a la sesión.
+- Añadidos endpoints de sesión y CSRF; registro, login y logout usan la cookie de sesión y protección CSRF. Una cuenta sin email verificado no puede iniciar sesión.
+- El enlace GET de verificación consume el token y vuelve a la interfaz con estado de éxito o error. Vite proxifica `/account` al backend.
+- La pantalla de registro/inicio de sesión está traducida a inglés y español. La ruta interna `/chat` exige sesión; OBS conserva su URL independiente y sigue siendo de solo lectura, sin acceso revocable.
+- El perfil `development` espera SMTP local en `localhost:1025`; el README documenta Mailpit. No se ha probado envío de correo real ni OAuth Twitch.
+- El callback vincula la autorización persistida al ID de la cuenta verificada de la sesión; una autorización ya asignada a otro creador no se puede transferir.
+- Verificación: `./gradlew test --warning-mode all` pasó; `npm run unit` (5 pruebas), `npm run e2e` (5 escenarios/26 pasos) y `npm run build` pasaron. Cucumber cubre el registro visible, OAuth oculto sin sesión y redirección de `/chat`; MockMvc cubre OAuth anónimo/autenticado, CSRF, login verificado/no verificado, retorno de verificación y persistencia del propietario. No se probó SMTP real ni consentimiento Twitch.
+
 ### Limitaciones aún abiertas
 
 - La revocación explícita desde la interfaz aún no está implementada; un refresh token inválido sí marca el canal para volver a autorizarlo.

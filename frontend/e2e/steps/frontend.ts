@@ -16,13 +16,13 @@ AfterAll(async () => { await browser?.close() })
 
 Given('the frontend dashboard is open', async () => {
   await page.goto(baseURL)
-  await page.getByRole('heading', { name: 'Your stream, in view.' }).waitFor()
+  await page.getByRole('heading', { name: 'Create your creator account' }).waitFor()
 })
 When('I choose Spanish', async () => { await page.locator('#language-select').selectOption('es') })
 When('I choose the light theme', async () => { await page.locator('#theme-select').selectOption('light') })
 When('I reload the page', async () => { await page.reload() })
 Then('the dashboard is shown in Spanish', async () => {
-  await page.getByRole('heading', { name: 'Tu directo, de un vistazo.' }).waitFor()
+  await page.getByRole('heading', { name: 'Crea tu cuenta de creador' }).waitFor()
   assert.equal(await page.locator('#language-select').inputValue(), 'es')
 })
 Then('the light theme is active', async () => {
@@ -34,7 +34,13 @@ Then('the local development overlay is shown', async () => {
   await page.getByText('Waiting for live chat messages…', { exact: true }).waitFor()
   assert.equal(new URL(page.url()).pathname, '/embed/chat')
 })
-When('I return after Twitch authorization', async () => { await page.goto(`${baseURL}/?twitch=connected`) })
-Then('the dashboard confirms the Twitch connection', async () => {
-  await page.getByText('Connected', { exact: true }).waitFor()
+Then('registration is required before Twitch can be connected', async () => {
+  assert.equal(await page.getByRole('button', { name: 'Create account', exact: true }).count(), 1)
+  assert.equal(await page.getByRole('link', { name: 'Connect with Twitch', exact: true }).count(), 0)
+})
+
+When('I open the protected live chat directly', async () => { await page.goto(`${baseURL}/chat`) })
+Then('I am returned to account registration', async () => {
+  await page.getByRole('heading', { name: 'Create your creator account' }).waitFor()
+  assert.equal(new URL(page.url()).pathname, '/')
 })

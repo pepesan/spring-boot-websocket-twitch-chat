@@ -7,6 +7,7 @@ import com.cursosdedesarrollo.websockettwitchchat.channels.ChannelConnectorRegis
 import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProvider;
 import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProviderRegistry;
 import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthTokenResponse;
+import com.cursosdedesarrollo.websockettwitchchat.auth.CreatorAccountService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -30,6 +31,7 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.Base64;
+import java.security.Principal;
 
 @Controller
 @RequestMapping("/callback")
@@ -43,6 +45,7 @@ public class CallBackController {
     private final OAuthProviderRegistry providerRegistry;
     private final ChannelAuthorizationService authorizationService;
     private final ChannelConnectorRegistry connectorRegistry;
+    private final CreatorAccountService creatorAccountService;
     private final Clock clock;
     @Value("${frontend.public-url:http://localhost:8080}")
     private String frontendPublicUrl = "http://localhost:8080";
@@ -52,18 +55,21 @@ public class CallBackController {
     public CallBackController(
             OAuthProviderRegistry providerRegistry,
             ChannelAuthorizationService authorizationService,
-            ChannelConnectorRegistry connectorRegistry) {
-        this(providerRegistry, authorizationService, connectorRegistry, Clock.systemUTC());
+            ChannelConnectorRegistry connectorRegistry,
+            CreatorAccountService creatorAccountService) {
+        this(providerRegistry, authorizationService, connectorRegistry, creatorAccountService, Clock.systemUTC());
     }
 
     CallBackController(
             OAuthProviderRegistry providerRegistry,
             ChannelAuthorizationService authorizationService,
             ChannelConnectorRegistry connectorRegistry,
+            CreatorAccountService creatorAccountService,
             Clock clock) {
         this.providerRegistry = providerRegistry;
         this.authorizationService = authorizationService;
         this.connectorRegistry = connectorRegistry;
+        this.creatorAccountService = creatorAccountService;
         this.clock = clock;
     }
 
@@ -91,7 +97,8 @@ public class CallBackController {
             @RequestParam(name = "code", required = false) String code,
             @RequestParam(name = "state", required = false) String state,
             @RequestParam(name = "error", required = false) String error,
-            HttpServletRequest request) {
+            HttpServletRequest request,
+            Principal principal) {
         OAuthProvider provider;
         ChannelConnector connector;
         try {
@@ -120,10 +127,22 @@ public class CallBackController {
         if (code == null || code.isBlank()) {
             return ResponseEntity.badRequest().body("El proveedor no devolvió un código de autorización.");
         }
+        if (principal == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Sign in again before connecting a platform.");
+        }
+        Integer creatorAccountId;
+        try {
+            creatorAccountId = creatorAccountService.requireVerifiedAccountId(principal.getName());
+        } catch (IllegalArgumentException exception) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body("Sign in again before connecting a platform.");
+        }
+
 
         try {
             OAuthTokenResponse token = provider.exchangeAuthorizationCode(code);
-            ChannelAuthorization authorization = authorizationService.authorize(provider, token);
+            ChannelAuthorization authorization = authorizationService.authorize(provider, token, creatorAccountId);
             connector.connect(authorization);
             String separator = frontendPublicUrl.endsWith("/") ? "" : "/";
             return ResponseEntity.status(HttpStatus.SEE_OTHER)

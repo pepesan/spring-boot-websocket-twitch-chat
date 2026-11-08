@@ -50,13 +50,17 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:5173`. The Vite server binds to localhost and proxies `/callback` and `/websocket` to the backend on port 8080. Use the Twitch connect button; Twitch returns to `http://localhost:8080/callback/twitch`, and a successful authorization redirects back to the frontend. Keep the browser host as `localhost` so the OAuth session cookie matches the callback host.
+Open `http://localhost:5173`. Vite proxies `/account`, `/callback`, and `/websocket` to the backend on port 8080. Keep the browser host as `localhost` so the OAuth session cookie matches the callback host.
+
+The required order is: create an application account (password at least 12 characters), verify the email using the sent link, sign in, then choose **Connect with Twitch**. The development profile expects an SMTP server at `localhost:1025`; for example, run Mailpit with `docker run --rm -p 1025:1025 -p 8025:8025 axllent/mailpit` and inspect messages at `http://localhost:8025`. The verification link goes through Vite to the backend and returns to the frontend. OAuth start requires the signed-in application session; Twitch's callback remains public but validates its session-bound, single-use `state`.
+
+Each new Twitch authorization is linked in SQLite to the signed-in creator account. An authorization already owned by another creator cannot be reassigned.
 
 Flyway applies the schema migrations on first backend start. The application loads `src/main/resources/commands.json` and synchronizes those commands into SQLite by command name. Online command editing and per-channel command management are not implemented.
 
-The live chat is at `http://localhost:5173/chat`. The OBS browser-source URL in local development is `http://localhost:5173/embed/chat`; it has a transparent background and displays the same read-only WebSocket chat. The WebSocket endpoint is unauthenticated and the overlay has no revocable access key, so keep both services local and do not expose them to the Internet.
+After signing in, the live chat is at `http://localhost:5173/chat`. The OBS browser-source URL in local development is `http://localhost:5173/embed/chat`; it has a transparent background and displays the same read-only WebSocket chat. The WebSocket endpoint is unauthenticated and the overlay has no revocable access key, so keep both services local and do not expose them to the Internet.
 
-A real Twitch consent and live-chat test has not been performed as part of this setup; use a test channel and account when you verify it. The optional `DEVELOPMENT_CREATOR_EMAIL` and `DEVELOPMENT_CREATOR_PASSWORD` variables seed a separate local account for the account module; they are not required for the Twitch OAuth path.
+The optional `DEVELOPMENT_CREATOR_EMAIL` and `DEVELOPMENT_CREATOR_PASSWORD` variables seed a pre-verified application account for local sign-in; they are not Twitch credentials and are not required if you register through the UI.
 
 ## Commands and events
 
@@ -85,4 +89,4 @@ The Cucumber E2E script starts its own local Vite server; stop any separately st
 
 ## Current scope
 
-Twitch is the only integrated provider. The initial Vue 3 + Pinia + Vuetify UI, light/dark theme, English/Spanish preferences, Twitch OAuth entry, read-only live chat, and local transparent OBS view are implemented. Creator/channel management, guided onboarding, online/per-channel command editing, `!pole`, questions, overlay access control/revocation, and overlay styling customization remain pending. See [`BACKLOG.md`](BACKLOG.md) for planned work and [`CHANGELOG.md`](CHANGELOG.md) for verified behavior.
+Twitch is the only integrated provider. Implemented: Vue 3 + Pinia + Vuetify UI, light/dark theme, English/Spanish preferences, creator-account registration/email verification/sign-in, account-gated Twitch OAuth, read-only live chat, and a local transparent OBS view. Creator/channel management, guided multi-step onboarding, online/per-channel command editing, `!pole`, questions, overlay access control/revocation, and overlay styling customization remain pending. See [`BACKLOG.md`](BACKLOG.md) for planned work and [`CHANGELOG.md`](CHANGELOG.md) for verified behavior.

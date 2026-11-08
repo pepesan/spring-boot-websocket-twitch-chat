@@ -48,6 +48,14 @@ public class CreatorAccountService {
         this.publicUrl=publicUrl.replaceAll("/+$", ""); this.verificationTtl=verificationTtl; this.resetTtl=resetTtl; this.clock=clock;
     }
 
+
+    @Transactional(readOnly = true)
+    public Integer requireVerifiedAccountId(String email) {
+        return accounts.findByEmail(normalize(email))
+                .filter(CreatorAccountEntity::isEmailVerified)
+                .map(CreatorAccountEntity::getId)
+                .orElseThrow(() -> new IllegalArgumentException("A verified creator account is required"));
+    }
     @Transactional
     public void register(String email, String password) {
         String normalized = normalize(email);

@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.argon2.Argon2PasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -32,6 +34,7 @@ public class CreatorAccountSecurityConfig {
     @Bean SecurityFilterChain creatorSecurity(HttpSecurity http, DaoAuthenticationProvider provider) throws Exception {
         http.authenticationProvider(provider)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/callback/*/start").authenticated()
                         .requestMatchers(
                                 "/",
                                 "/index.html",
@@ -41,7 +44,8 @@ public class CreatorAccountSecurityConfig {
                                 "/avatar.png",
                                 "/favicon.ico",
                                 "/websocket",
-                                "/callback/**",
+                                "/callback/*",
+                                "/account/csrf",
                                 "/account/login",
                                 "/account/register",
                                 "/account/verify-email",
@@ -55,6 +59,13 @@ public class CreatorAccountSecurityConfig {
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll())
+                .exceptionHandling(exceptions -> exceptions
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                request -> "/account/session".equals(request.getServletPath()))
+                        .defaultAuthenticationEntryPointFor(
+                                new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                                request -> request.getServletPath().matches("/callback/[^/]+/start")))
                 .sessionManagement(session -> session.sessionFixation(fixation -> fixation.changeSessionId()));
         return http.build();
     }

@@ -1,15 +1,23 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
+import { useAccountStore } from './stores/account'
 import { usePreferencesStore } from './stores/preferences'
 
+const account = useAccountStore()
 const prefs = usePreferencesStore()
 const { t, locale } = useI18n()
 const route = useRoute()
 const theme = useTheme()
 const isOverlay = computed(() => route.meta.overlay === true)
+const router = useRouter()
+async function signOut() {
+  await account.logout()
+  if (account.status !== 'authenticated') await router.replace({ name: 'dashboard' })
+}
+onMounted(() => { void account.loadSession() })
 watch(() => prefs.language, value => { locale.value = value })
 watch(() => prefs.theme, value => { theme.change(value) })
 </script>
@@ -22,10 +30,12 @@ watch(() => prefs.theme, value => { theme.change(value) })
         <v-app-bar-title><RouterLink class="brand" to="/">{{ t('app.name') }}</RouterLink></v-app-bar-title>
         <nav class="top-nav" :aria-label="t('app.name')">
           <RouterLink to="/">{{ t('app.dashboard') }}</RouterLink>
-          <RouterLink to="/chat">{{ t('app.chat') }}</RouterLink>
+          <RouterLink v-if="account.status === 'authenticated'" to="/chat">{{ t('app.chat') }}</RouterLink>
           <RouterLink to="/embed/chat">{{ t('app.overlay') }}</RouterLink>
         </nav>
         <v-spacer />
+        <span v-if="account.status === 'authenticated'" class="account-email">{{ account.email }}</span>
+        <v-btn v-if="account.status === 'authenticated'" size="small" variant="text" :disabled="account.busy" @click="signOut">{{ t('auth.logout') }}</v-btn>
         <label class="setting-label" for="language-select">{{ t('app.language') }}</label>
         <select id="language-select" :value="prefs.language" @change="prefs.setLanguage(($event.target as HTMLSelectElement).value as 'en' | 'es')">
           <option value="en">English</option><option value="es">Español</option>

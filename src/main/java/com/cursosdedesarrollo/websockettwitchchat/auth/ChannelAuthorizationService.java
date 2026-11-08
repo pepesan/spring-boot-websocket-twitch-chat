@@ -27,16 +27,19 @@ public class ChannelAuthorizationService {
         this.clock = clock;
     }
 
-    public ChannelAuthorization authorize(OAuthProvider provider, OAuthTokenResponse token) {
+    public ChannelAuthorization authorize(
+            OAuthProvider provider, OAuthTokenResponse token, Integer creatorAccountId) {
+        if (creatorAccountId == null || creatorAccountId <= 0) {
+            throw new IllegalArgumentException("A verified creator account is required");
+        }
         requireCompleteToken(token);
         OAuthIdentity identity = provider.validateAccessToken(token.accessToken());
         if (identity == null || identity.userId() == null || identity.userId().isBlank()) {
             throw new InvalidAuthorizationException("OAuth provider returned an incomplete identity");
         }
         synchronized (lockFor(provider.providerId(), identity.userId())) {
-            return saveValidated(provider, token.accessToken(), token.refreshToken(), identity, null);
+            return saveValidated(provider, token.accessToken(), token.refreshToken(), identity, null, creatorAccountId);
         }
-
     }
     public ChannelAuthorization validateOrRefresh(OAuthProvider provider, ChannelAuthorization authorization) {
         if (!provider.providerId().equals(authorization.providerId())) {
@@ -58,7 +61,7 @@ public class ChannelAuthorizationService {
             OAuthIdentity identity = provider.validateAccessToken(authorization.accessToken());
             return saveValidated(
                     provider, authorization.accessToken(), authorization.refreshToken(), identity,
-                    authorization.providerUserId());
+                    authorization.providerUserId(), null);
         } catch (OAuthProviderException exception) {
             if (!provider.isInvalidAccessTokenFailure(exception)) {
                 throw exception;
@@ -73,7 +76,7 @@ public class ChannelAuthorizationService {
             OAuthIdentity identity = provider.validateAccessToken(refreshed.accessToken());
             return saveValidated(
                     provider, refreshed.accessToken(), refreshed.refreshToken(), identity,
-                    authorization.providerUserId());
+                    authorization.providerUserId(), null);
         } catch (OAuthProviderException exception) {
             if (provider.isInvalidRefreshTokenFailure(exception)) {
                 return markNeedsReauthorization(authorization);
@@ -89,7 +92,8 @@ public class ChannelAuthorizationService {
             String accessToken,
             String refreshToken,
             OAuthIdentity identity,
-            String expectedProviderUserId) {
+            String expectedProviderUserId,
+            Integer creatorAccountId) {
         if (identity == null
                 || identity.clientId() == null
                 || !provider.clientId().equals(identity.clientId())
@@ -120,7 +124,11 @@ public class ChannelAuthorizationService {
                 ChannelAuthorization.Status.AUTHORIZED,
                 now,
                 now);
-        authorizationRepository.save(validated);
+        if (creatorAccountId == null) {
+            authorizationRepository.save(validated);
+        } else {
+            authorizationRepository.save(validated, creatorAccountId);
+        }
         return validated;
     }
 

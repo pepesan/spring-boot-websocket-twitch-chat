@@ -39,7 +39,7 @@ public class SQLiteChannelAuthorizationRepository {
         Optional<ChannelAuthorizationEntity> existing = jpaRepository.findById(key);
         if (existing.isPresent()) {
             Integer currentOwner = existing.get().getCreatorAccountId();
-            if (currentOwner == null || !currentOwner.equals(creatorAccountId)) {
+            if (currentOwner != null && !currentOwner.equals(creatorAccountId)) {
                 throw new IllegalStateException("Existing channel authorization cannot be reassigned");
             }
         }

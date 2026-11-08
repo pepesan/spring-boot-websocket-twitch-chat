@@ -112,19 +112,24 @@ class SQLiteChannelAuthorizationRepositoryTest {
     }
 
     @Test
-    void refusesToAssignAnExistingUnownedAuthorizationToANewCreator() {
+    void linksAnUnownedAuthorizationToTheAccountCompletingOAuthButNeverReassignsIt() {
         ChannelAuthorization authorization = authorization(
                 "twitch", "1001", "streamer", "access", "refresh", Instant.parse("2026-01-05T00:00:00Z"));
         repository.save(authorization);
 
-        assertThrows(IllegalStateException.class, () -> repository.save(authorization, 42));
-
-        ChannelAuthorizationEntity stored = jpaRepository
+        repository.save(authorization, 42);
+        assertEquals(42, jpaRepository
                 .findById(new ChannelAuthorizationKey("twitch", "1001"))
-                .orElseThrow();
-        assertNull(stored.getCreatorAccountId());
-    }
+                .orElseThrow()
+                .getCreatorAccountId());
 
+        assertThrows(IllegalStateException.class, () -> repository.save(authorization, 43));
+        assertEquals(42, jpaRepository
+                .findById(new ChannelAuthorizationKey("twitch", "1001"))
+                .orElseThrow()
+                .getCreatorAccountId());
+
+    }
     private static ChannelAuthorization authorization(
             String provider, String providerUserId, String login, String accessToken, String refreshToken, Instant updatedAt) {
         return new ChannelAuthorization(

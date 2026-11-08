@@ -50,13 +50,17 @@ npm ci
 npm run dev
 ```
 
-Abre `http://localhost:5173`. Vite escucha solo en localhost y redirige `/callback` y `/websocket` al backend del puerto 8080. Pulsa el botón de conexión con Twitch; Twitch vuelve a `http://localhost:8080/callback/twitch` y, si la autorización termina bien, el backend redirige al frontend. Mantén `localhost` como hostname del navegador para que la cookie de sesión OAuth coincida con el hostname del callback.
+Abre `http://localhost:5173`. Vite redirige `/account`, `/callback` y `/websocket` al backend del puerto 8080. Mantén `localhost` como hostname del navegador para que la cookie de sesión OAuth coincida con el hostname del callback.
+
+El orden obligatorio es: crear una cuenta de la aplicación (contraseña de al menos 12 caracteres), verificar el correo con el enlace recibido, iniciar sesión y, después, pulsar **Conectar con Twitch**. El perfil de desarrollo espera un servidor SMTP en `localhost:1025`; por ejemplo, arranca Mailpit con `docker run --rm -p 1025:1025 -p 8025:8025 axllent/mailpit` y consulta los mensajes en `http://localhost:8025`. El enlace de verificación pasa por Vite hacia el backend y vuelve al frontend. El inicio de OAuth exige una sesión autenticada de la aplicación; el callback de Twitch sigue siendo público, pero valida el `state` de un solo uso vinculado a la sesión.
+
+Cada autorización nueva de Twitch queda vinculada en SQLite a la cuenta de creador con sesión iniciada. No se puede reasignar a otro creador una autorización que ya tenga propietario.
 
 En el primer arranque del backend, Flyway aplica las migraciones. La aplicación carga `src/main/resources/commands.json` y sincroniza los comandos en SQLite por nombre. Todavía no existe edición online ni gestión de comandos por canal.
 
-El chat en directo está en `http://localhost:5173/chat`. La URL local de fuente de navegador para OBS es `http://localhost:5173/embed/chat`; tiene fondo transparente y muestra el mismo chat WebSocket de solo lectura. El WebSocket no requiere autenticación y la vista no tiene una clave revocable; mantén ambos servicios en local y no los expongas a Internet.
+Después de iniciar sesión, el chat está en `http://localhost:5173/chat`. La URL local de fuente de navegador para OBS es `http://localhost:5173/embed/chat`; tiene fondo transparente y muestra el mismo chat WebSocket de solo lectura. El WebSocket no requiere autenticación y la vista no tiene una clave revocable; mantén ambos servicios en local y no los expongas a Internet.
 
-No se ha probado un consentimiento Twitch real ni se han enviado mensajes en directo; haz esa comprobación con una cuenta y un canal de prueba. Las variables opcionales `DEVELOPMENT_CREATOR_EMAIL` y `DEVELOPMENT_CREATOR_PASSWORD` crean una cuenta local separada para el módulo de cuentas; no hacen falta para el flujo OAuth de Twitch.
+Las variables opcionales `DEVELOPMENT_CREATOR_EMAIL` y `DEVELOPMENT_CREATOR_PASSWORD` crean una cuenta local pre-verificada para iniciar sesión; no son credenciales Twitch ni hacen falta si te registras desde la interfaz.
 
 ## Comandos y eventos
 
@@ -85,4 +89,4 @@ El comando Cucumber E2E arranca su propio servidor Vite local; detén antes cual
 
 ## Alcance actual
 
-Twitch es el único proveedor integrado. Ya están implementados el frontend inicial Vue 3 + Pinia + Vuetify, los temas claro/oscuro, preferencias en inglés/español, el acceso al OAuth Twitch, el chat de solo lectura y una vista OBS local transparente. Siguen pendientes la gestión de creadores/canales, onboarding guiado, edición online o por canal de comandos, `!pole`, preguntas, control/revocación del acceso al overlay y personalización de su estilo. Consulta [`BACKLOG.md`](BACKLOG.md) para el trabajo pendiente y [`CHANGELOG.md`](CHANGELOG.md) para el comportamiento verificado.
+Twitch es el único proveedor integrado. Ya están implementados el frontend Vue 3 + Pinia + Vuetify, temas claro/oscuro, preferencias en inglés/español, registro/verificación/inicio de sesión, OAuth Twitch protegido por cuenta, chat de solo lectura y una vista OBS local transparente. Siguen pendientes la gestión de creadores/canales, onboarding guiado en varios pasos, edición online o por canal de comandos, `!pole`, preguntas, control/revocación del acceso al overlay y personalización de su estilo. Consulta [`BACKLOG.md`](BACKLOG.md) para el trabajo pendiente y [`CHANGELOG.md`](CHANGELOG.md) para el comportamiento verificado.

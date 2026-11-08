@@ -50,7 +50,7 @@ class ChannelAuthorizationServiceTest {
     void persistsGenericProviderIdentityOnlyAfterValidation() {
         when(provider.validateAccessToken(TOKEN.accessToken())).thenReturn(identity("external-user-1001"));
 
-        ChannelAuthorization authorization = authorizationService.authorize(provider, TOKEN);
+        ChannelAuthorization authorization = authorizationService.authorize(provider, TOKEN, 42);
 
         assertEquals("youtube", authorization.providerId());
         assertEquals("external-user-1001", authorization.providerUserId());
@@ -59,7 +59,7 @@ class ChannelAuthorizationServiceTest {
         assertEquals(TOKEN.refreshToken(), authorization.refreshToken());
         assertEquals(NOW.plusSeconds(3600), authorization.expiresAt());
         assertEquals(NOW, authorization.validatedAt());
-        verify(repository).save(authorization);
+        verify(repository).save(authorization, 42);
     }
 
     @Test
@@ -67,9 +67,10 @@ class ChannelAuthorizationServiceTest {
         when(provider.validateAccessToken(TOKEN.accessToken())).thenReturn(
                 new OAuthIdentity("other-client-id", "external-user-1001", "streamer_login", REQUIRED_SCOPES, 3600));
 
-        assertThrows(IllegalArgumentException.class, () -> authorizationService.authorize(provider, TOKEN));
+        assertThrows(IllegalArgumentException.class, () -> authorizationService.authorize(provider, TOKEN, 42));
 
         verify(repository, never()).save(any());
+        verify(repository, never()).save(any(), any());
     }
 
     @Test
@@ -77,9 +78,20 @@ class ChannelAuthorizationServiceTest {
         when(provider.validateAccessToken(TOKEN.accessToken())).thenReturn(
                 new OAuthIdentity("expected-client-id", "external-user-1001", "streamer_login", List.of("chat.read"), 3600));
 
-        assertThrows(IllegalArgumentException.class, () -> authorizationService.authorize(provider, TOKEN));
+        assertThrows(IllegalArgumentException.class, () -> authorizationService.authorize(provider, TOKEN, 42));
 
         verify(repository, never()).save(any());
+        verify(repository, never()).save(any(), any());
+    }
+
+    @Test
+    void requiresAnAccountOwnerBeforeValidatingOrPersistingProviderCredentials() {
+        assertThrows(IllegalArgumentException.class,
+                () -> authorizationService.authorize(provider, TOKEN, null));
+
+        verify(provider, never()).validateAccessToken(any());
+        verify(repository, never()).save(any());
+        verify(repository, never()).save(any(), any());
     }
 
     @Test

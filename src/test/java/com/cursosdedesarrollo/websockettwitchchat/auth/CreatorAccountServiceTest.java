@@ -37,6 +37,20 @@ class CreatorAccountServiceTest {
                 Duration.ofHours(1),Clock.fixed(Instant.ofEpochMilli(NOW),ZoneOffset.UTC));
     }
 
+    @Test
+    void resolvesOnlyVerifiedAccountOwnershipForOAuthCallback() {
+        CreatorAccountEntity verifiedAccount = account(1);
+        verifiedAccount.setEmailVerified(true);
+        when(accounts.findByEmail("person@example.test")).thenReturn(Optional.of(verifiedAccount));
+
+        assertEquals(1, service.requireVerifiedAccountId(" Person@Example.Test "));
+
+        CreatorAccountEntity unverifiedAccount = account(2);
+        when(accounts.findByEmail("unverified@example.test")).thenReturn(Optional.of(unverifiedAccount));
+        assertThrows(IllegalArgumentException.class,
+                () -> service.requireVerifiedAccountId("unverified@example.test"));
+    }
+
     @Test void registrationNormalizesEmailAndPersistsOnlyTokenHash() throws Exception {
         CreatorAccountEntity account=account(1);
         when(accounts.findByEmail("person@example.test")).thenReturn(Optional.empty());

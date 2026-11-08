@@ -7,6 +7,7 @@ import com.cursosdedesarrollo.websockettwitchchat.channels.ChannelConnectorRegis
 import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProvider;
 import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProviderRegistry;
 import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthTokenResponse;
+import com.cursosdedesarrollo.websockettwitchchat.auth.CreatorAccountService;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.security.Principal;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -42,6 +44,7 @@ class CallBackControllerTest {
 
     private OAuthProvider provider;
     private ChannelAuthorizationService authorizationService;
+    private CreatorAccountService creatorAccountService;
     private ChannelConnector connector;
     private CallBackController controller;
 
@@ -52,12 +55,15 @@ class CallBackControllerTest {
         when(provider.authorizationUri(anyString())).thenAnswer(invocation -> URI.create(
                 "https://provider.example/authorize?client_id=test-client&state=" + invocation.getArgument(0)));
         authorizationService = mock(ChannelAuthorizationService.class);
+        creatorAccountService = mock(CreatorAccountService.class);
+        when(creatorAccountService.requireVerifiedAccountId("creator@example.test")).thenReturn(42);
         connector = mock(ChannelConnector.class);
         when(connector.providerId()).thenReturn("twitch");
         controller = new CallBackController(
                 new OAuthProviderRegistry(List.of(provider)),
                 authorizationService,
                 new ChannelConnectorRegistry(List.of(connector)),
+                creatorAccountService,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -91,7 +97,8 @@ class CallBackControllerTest {
         when(secondConnector.providerId()).thenReturn("youtube");
         CallBackController multiProviderController = new CallBackController(
                 new OAuthProviderRegistry(List.of(provider, secondProvider)), authorizationService,
-                new ChannelConnectorRegistry(List.of(connector, secondConnector)), Clock.fixed(NOW, ZoneOffset.UTC));
+                new ChannelConnectorRegistry(List.of(connector, secondConnector)), creatorAccountService,
+                Clock.fixed(NOW, ZoneOffset.UTC));
         MockHttpServletRequest request = new MockHttpServletRequest();
 
         multiProviderController.startAuthorization("twitch", request, new MockHttpServletResponse());
@@ -109,20 +116,20 @@ class CallBackControllerTest {
         OAuthTokenResponse token = tokenResponse();
         ChannelAuthorization authorization = channelAuthorization();
         when(provider.exchangeAuthorizationCode("single-use-code")).thenReturn(token);
-        when(authorizationService.authorize(provider, token)).thenReturn(authorization);
+        when(authorizationService.authorize(provider, token, 42)).thenReturn(authorization);
 
         ResponseEntity<String> response = controller.handleCallback(
-                "twitch", "single-use-code", "valid-state", null, request);
+                "twitch", "single-use-code", "valid-state", null, request, principal());
 
         assertEquals(HttpStatus.SEE_OTHER, response.getStatusCode());
         assertEquals(URI.create("http://localhost:8080/?twitch=connected"), response.getHeaders().getLocation());
         verify(provider).exchangeAuthorizationCode("single-use-code");
-        verify(authorizationService).authorize(provider, token);
+        verify(authorizationService).authorize(provider, token, 42);
         verify(connector).connect(authorization);
         assertNull(request.getSession().getAttribute(CallBackController.stateSessionAttribute("twitch")));
 
         ResponseEntity<String> replay = controller.handleCallback(
-                "twitch", "single-use-code", "valid-state", null, request);
+                "twitch", "single-use-code", "valid-state", null, request, principal());
         assertEquals(HttpStatus.BAD_REQUEST, replay.getStatusCode());
         verify(provider, org.mockito.Mockito.times(1)).exchangeAuthorizationCode("single-use-code");
     }
@@ -130,16 +137,17 @@ class CallBackControllerTest {
     @Test
     void callbackRejectsIncorrectOrExpiredStateBeforeExchangingCode() {
         MockHttpServletRequest request = requestWithState("valid-state", NOW.toEpochMilli());
-        ResponseEntity<String> wrongState = controller.handleCallback("twitch", "code", "wrong-state", null, request);
+        ResponseEntity<String> wrongState = controller.handleCallback(
+                "twitch", "code", "wrong-state", null, request, principal());
         assertEquals(HttpStatus.BAD_REQUEST, wrongState.getStatusCode());
 
         MockHttpServletRequest expiredRequest = requestWithState("expired-state", NOW.minusSeconds(601).toEpochMilli());
         ResponseEntity<String> expiredState = controller.handleCallback(
-                "twitch", "code", "expired-state", null, expiredRequest);
+                "twitch", "code", "expired-state", null, expiredRequest, principal());
         assertEquals(HttpStatus.BAD_REQUEST, expiredState.getStatusCode());
 
         verify(provider, never()).exchangeAuthorizationCode(anyString());
-        verify(authorizationService, never()).authorize(provider, tokenResponse());
+        verify(authorizationService, never()).authorize(any(), any(), any());
         verify(connector, never()).connect(any());
     }
 
@@ -148,12 +156,12 @@ class CallBackControllerTest {
         MockHttpServletRequest request = requestWithState("valid-state", NOW.toEpochMilli());
 
         ResponseEntity<String> response = controller.handleCallback(
-                "twitch", null, "valid-state", "access_denied", request);
+                "twitch", null, "valid-state", "access_denied", request, principal());
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse(response.getBody().contains("access_denied"));
         verify(provider, never()).exchangeAuthorizationCode(anyString());
-        verify(authorizationService, never()).authorize(provider, tokenResponse());
+        verify(authorizationService, never()).authorize(any(), any(), any());
         verify(connector, never()).connect(any());
     }
 
@@ -162,13 +170,30 @@ class CallBackControllerTest {
         MockHttpServletRequest request = requestWithState("valid-state", NOW.toEpochMilli());
 
         ResponseEntity<String> response = controller.handleCallback(
-                "unknown", "code", "valid-state", null, request);
+                "unknown", "code", "valid-state", null, request, principal());
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotNull(request.getSession().getAttribute(CallBackController.stateSessionAttribute("twitch")));
         verify(provider, never()).exchangeAuthorizationCode(anyString());
-        verify(authorizationService, never()).authorize(provider, tokenResponse());
+        verify(authorizationService, never()).authorize(any(), any(), any());
         verify(connector, never()).connect(any());
+    }
+
+    @Test
+    void callbackRejectsMissingCreatorSessionBeforeExchangingCode() {
+        MockHttpServletRequest request = requestWithState("valid-state", NOW.toEpochMilli());
+
+        ResponseEntity<String> response = controller.handleCallback(
+                "twitch", "code", "valid-state", null, request, null);
+
+        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        verify(provider, never()).exchangeAuthorizationCode(anyString());
+        verify(creatorAccountService, never()).requireVerifiedAccountId(anyString());
+        verify(connector, never()).connect(any());
+    }
+
+    private Principal principal() {
+        return () -> "creator@example.test";
     }
 
     private MockHttpServletRequest requestWithState(String state, long createdAt) {
