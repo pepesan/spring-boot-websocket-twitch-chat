@@ -3,9 +3,9 @@
 Esta herramienta está hecha en Java Spring Boot y permite la gestión del chat de Twitch
 
 ## Instalación
-Necesitas poder ejecutar con Maven y JDK
+Necesitas Java 25. El proyecto usa Gradle; el wrapper incluido descarga la versión requerida.
 ## Configuración
 * pendiente de meter json para comandos
 ## Lanzamiento
-mvn spring-boot:run
+./gradlew bootRun
 ## Ayuda

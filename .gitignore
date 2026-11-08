@@ -41,3 +41,9 @@ src/main/resources/application.properties.old
 src/main/resources/application.properties.bot
 
 myapp.log
+/.mcp.json
+PLAN.md
+CLAUDE.md
+AGENTS.md
+BACKLOG.md
+/data/

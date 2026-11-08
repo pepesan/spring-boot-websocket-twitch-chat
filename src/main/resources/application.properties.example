@@ -9,3 +9,8 @@ twitch.clientSecret=MY_CLIENT_SECRET
 twitch.accessToken=MY_ACCESS_TOKEN
 twitch.oauthToken=MY_OAUTH_TOKEN
 twitch.channel=MY_CHANNEL_NAME
+
+# Credenciales de canal: SQLite y keyset AES-GCM generado por Google Tink.
+twitch.credentials.database=./data/twitch-chat.sqlite
+# Configurar TWITCH_TOKEN_ENCRYPTION_KEYSET con el keyset Base64 generado por la aplicación.
+twitch.credentials.encryption-keyset=${TWITCH_TOKEN_ENCRYPTION_KEYSET:}
