@@ -27,6 +27,9 @@ dependencies {
     // https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine
     implementation("com.github.ben-manes.caffeine:caffeine:3.3.1")
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-flyway'
+    implementation 'org.flywaydb:flyway-database-nc-sqlite:12.4.0'
+    implementation 'org.hibernate.orm:hibernate-community-dialects'
     implementation 'com.google.crypto.tink:tink:1.24.0'
     implementation 'org.xerial:sqlite-jdbc:3.54.1.0'
 
@@ -48,8 +51,6 @@ dependencies {
 
 //    // logback
 //    implementation group: 'ch.qos.logback', name: 'logback-classic', version: '1.3.5'
-// https://mvnrepository.com/artifact/com.h2database/h2
-    implementation 'com.h2database:h2:2.5.252'
     // https://mvnrepository.com/artifact/org.jboss.logging/jboss-logging
     // implementation 'org.jboss.logging:jboss-logging:3.5.3.Final'
 
@@ -63,8 +64,10 @@ dependencies {
     implementation 'commons-io:commons-io:2.22.0'
     implementation 'org.json:json:20260814'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
     testImplementation 'org.springframework.boot:spring-boot-testcontainers'
     testImplementation 'org.testcontainers:junit-jupiter:1.21.4'
+    testRuntimeOnly 'com.h2database:h2:2.5.252'
     implementation("org.jboss.logging:jboss-logging")
 }
 

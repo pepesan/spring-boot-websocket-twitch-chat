@@ -17,7 +17,7 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 ### Base de aplicación
 
 - Actualización a Spring Boot 4.1.2 y Java 25; Gradle Wrapper actualizado a Gradle 9.5.1.
-- Actualización de las dependencias directas de Twitch4J, Events4J, H2, Caffeine y bibliotecas auxiliares.
+- Actualización de dependencias directas de Twitch4J, Events4J, Caffeine y bibliotecas auxiliares; H2 queda solo para pruebas.
 
 ### OAuth seguro — fase inicial
 
@@ -31,9 +31,13 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 
 - Definido un contrato OAuth común (`OAuthProvider`) con registro de proveedores, respuestas de token/identidad neutrales y un adaptador real de Twitch. La URL de autorización, intercambio, renovación, validación e scopes dependen del adaptador.
 - El inicio y callback usan rutas por proveedor (`/callback/{providerId}/start` y `/callback/{providerId}`); `state` es de un solo uso y está aislado por proveedor dentro de la sesión. Un registro separado entrega la autorización al conector de la plataforma.
-- `ChannelAuthorization` y SQLite identifican credenciales por proveedor + ID externo estable. El esquema SQLite v2 migra las filas v1 de Twitch conservando ciphertext; access/refresh tokens siguen cifrados con Google Tink.
-- El callback valida identidad, Client ID y scopes requeridos antes de persistir. La conexión del canal existente se delega al conector Twitch.
-- Pruebas unitarias verifican contrato/selección de proveedor, aislamiento de state, validación antes de persistir, identidad por proveedor, cifrado y migración v1→v2. Smoke: aplicación Spring Boot 4.1.2/Java 25 arranca y `/callback/twitch/start` responde HTTP 302; sin conectar a Twitch real.
+- El callback valida identidad, Client ID y scopes requeridos antes de persistir; la conexión al chat se delega al conector de Twitch.
+- El smoke HTTP existente verificó `/callback/twitch/start` con HTTP 302; no se hizo conexión autenticada a Twitch.
+- `ChannelAuthorization` se persiste como entidad JPA por proveedor + ID externo estable. El adaptador cifra access/refresh tokens con Tink antes de entregarlos a JPA.
+- Flyway administra el esquema SQLite; V1 crea las tablas y V2 migra bases legacy `user_version` 1/2 a la versión 3, copiando el ciphertext sin descifrarlo. Hibernate usa `ddl-auto=validate`.
+- El fichero conserva la ruta por defecto `data/oauth-credentials.sqlite`; Flyway/JPA comparten datasource. La entidad de comandos y el usuario Twitch existentes también usan JPA. H2 es solo dependencia de pruebas.
+- Los repositorios de credenciales y comandos no se exponen por Spring Data REST. En sistemas POSIX, el fichero queda `rw-------` y el directorio `rwx------`.
+- Pruebas verifican persistencia JPA/SQLite, cifrado en disco, migraciones legacy v1/v2 y arranque de Spring Boot con validación del esquema; `gradle test --warning-mode all` pasó.
 
 ### Ciclo de vida y conexiones aisladas por canal
 

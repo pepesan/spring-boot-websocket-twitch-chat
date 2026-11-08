@@ -4,13 +4,21 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.TableGenerator;
 import lombok.Data;
 
 @Data
 @Entity
 public class Command {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @TableGenerator(
+            name = "command_ids",
+            table = "command_seq",
+            pkColumnName = "sequence_name",
+            valueColumnName = "next_val",
+            pkColumnValue = "command",
+            allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "command_ids")
     private Long id;
     private String name;
     private String outputText;
@@ -19,7 +27,7 @@ public class Command {
     private Boolean onlyMods;
 
     public Command(){
-        this.id = 0L;
+        this.id = null;
         this.name = "";
         this.outputText = "";
         this.outputType = "";
