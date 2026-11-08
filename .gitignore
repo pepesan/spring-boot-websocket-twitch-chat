@@ -48,3 +48,5 @@ CLAUDE.md
 AGENTS.md
 BACKLOG.md
 /data/
+/.env
+/.local/

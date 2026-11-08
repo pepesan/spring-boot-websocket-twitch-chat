@@ -22,6 +22,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest(properties = {
@@ -41,8 +42,6 @@ class SQLiteChannelAuthorizationRepositoryTest {
     @Autowired
     private ChannelAuthorizationJpaRepository jpaRepository;
 
-    @Autowired
-    private TokenCipher tokenCipher;
 
     @DynamicPropertySource
     static void configureSqlite(DynamicPropertyRegistry registry) {
@@ -110,6 +109,20 @@ class SQLiteChannelAuthorizationRepositoryTest {
                 () -> unconfigured.save(authorization("twitch", "1001", "streamer", "access", "refresh",
                         Instant.parse("2026-01-06T00:00:00Z"))));
         assertTrue(jpaRepository.findById(new ChannelAuthorizationKey("twitch", "1001")).isEmpty());
+    }
+
+    @Test
+    void refusesToAssignAnExistingUnownedAuthorizationToANewCreator() {
+        ChannelAuthorization authorization = authorization(
+                "twitch", "1001", "streamer", "access", "refresh", Instant.parse("2026-01-05T00:00:00Z"));
+        repository.save(authorization);
+
+        assertThrows(IllegalStateException.class, () -> repository.save(authorization, 42));
+
+        ChannelAuthorizationEntity stored = jpaRepository
+                .findById(new ChannelAuthorizationKey("twitch", "1001"))
+                .orElseThrow();
+        assertNull(stored.getCreatorAccountId());
     }
 
     private static ChannelAuthorization authorization(

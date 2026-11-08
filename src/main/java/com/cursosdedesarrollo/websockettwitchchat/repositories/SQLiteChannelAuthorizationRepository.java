@@ -25,6 +25,28 @@ public class SQLiteChannelAuthorizationRepository {
     }
 
     public void save(ChannelAuthorization authorization) {
+        ChannelAuthorizationKey key = new ChannelAuthorizationKey(
+                authorization.providerId(), authorization.providerUserId());
+        Integer creatorAccountId = jpaRepository.findById(key)
+                .map(ChannelAuthorizationEntity::getCreatorAccountId)
+                .orElse(null);
+        persist(authorization, creatorAccountId);
+    }
+
+    public void save(ChannelAuthorization authorization, Integer creatorAccountId) {
+        ChannelAuthorizationKey key = new ChannelAuthorizationKey(
+                authorization.providerId(), authorization.providerUserId());
+        Optional<ChannelAuthorizationEntity> existing = jpaRepository.findById(key);
+        if (existing.isPresent()) {
+            Integer currentOwner = existing.get().getCreatorAccountId();
+            if (currentOwner == null || !currentOwner.equals(creatorAccountId)) {
+                throw new IllegalStateException("Existing channel authorization cannot be reassigned");
+            }
+        }
+        persist(authorization, creatorAccountId);
+    }
+
+    private void persist(ChannelAuthorization authorization, Integer creatorAccountId) {
         jpaRepository.save(new ChannelAuthorizationEntity(
                 new ChannelAuthorizationKey(authorization.providerId(), authorization.providerUserId()),
                 authorization.login(),
@@ -34,7 +56,8 @@ public class SQLiteChannelAuthorizationRepository {
                 toEpochMillis(authorization.expiresAt()),
                 authorization.status().name(),
                 toEpochMillis(authorization.validatedAt()),
-                authorization.updatedAt().toEpochMilli()));
+                authorization.updatedAt().toEpochMilli(),
+                creatorAccountId));
     }
 
     public Optional<ChannelAuthorization> findByProviderUserId(String providerId, String providerUserId) {

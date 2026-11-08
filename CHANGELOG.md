@@ -19,6 +19,15 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 - Actualización a Spring Boot 4.1.2 y Java 25; Gradle Wrapper actualizado a Gradle 9.5.1.
 - Actualización de dependencias directas de Twitch4J, Events4J, Caffeine y bibliotecas auxiliares; H2 queda solo para pruebas.
 
+### Arranque local para el camino Twitch — 2026-11-08
+
+- Añadidos el perfil Spring `development`, la plantilla versionada `.env.example`, el `.env` ignorado por Git y `dev-local.sh`; el lanzador selecciona Java 25 de SDKMAN si el Java activo no cumple y crea un directorio de datos privado.
+- El perfil local usa SQLite independiente en `.local/data/oauth-credentials.sqlite`; Flyway aplica las cuatro migraciones y Hibernate valida el esquema. V4 añade la relación opcional entre autorización y cuenta creadora sin reasignar las filas existentes.
+- Documentados en inglés y español el registro de la aplicación Twitch, los scopes requeridos, la clave Tink, el arranque, OAuth, `commands.json` y la prueba manual pendiente.
+- Corregida la clase principal del task Gradle `generateTwitchCredentialKeyset`.
+- Verificación: suite `./gradlew test --warning-mode all` y arranque real del script con Java 25 y una base temporal vacía; Flyway llegó a V4, `commands.json` se cargó y `/login.html` y `/` devolvieron HTTP 200. No se autorizó una cuenta Twitch ni se enviaron mensajes.
+
+
 ### OAuth seguro — fase inicial
 
 - Inicio de OAuth Authorization Code Grant desde backend; el HTML ya no contiene Client ID, redirect URI, scopes ni un `state` constante.

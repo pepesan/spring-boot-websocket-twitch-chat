@@ -32,9 +32,11 @@ public class ChannelAuthorizationEntity {
     @Column(name = "validated_at")
     private Long validatedAtMillis;
 
+    @Column(name = "creator_account_id")
+    private Integer creatorAccountId;
+
     @Column(name = "updated_at", nullable = false)
     private Long updatedAtMillis;
-
     protected ChannelAuthorizationEntity() {
     }
 
@@ -47,7 +49,8 @@ public class ChannelAuthorizationEntity {
             Long expiresAtMillis,
             String status,
             Long validatedAtMillis,
-            Long updatedAtMillis) {
+            Long updatedAtMillis,
+            Integer creatorAccountId) {
         this.id = id;
         this.login = login;
         this.encryptedAccessToken = encryptedAccessToken;
@@ -57,6 +60,7 @@ public class ChannelAuthorizationEntity {
         this.status = status;
         this.validatedAtMillis = validatedAtMillis;
         this.updatedAtMillis = updatedAtMillis;
+        this.creatorAccountId = creatorAccountId;
     }
 
     public ChannelAuthorizationKey getId() {
@@ -93,5 +97,9 @@ public class ChannelAuthorizationEntity {
 
     public Long getUpdatedAtMillis() {
         return updatedAtMillis;
+    }
+
+    public Integer getCreatorAccountId() {
+        return creatorAccountId;
     }
 }

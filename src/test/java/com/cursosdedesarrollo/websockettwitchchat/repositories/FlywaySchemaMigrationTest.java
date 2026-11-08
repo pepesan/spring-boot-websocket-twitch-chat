@@ -13,6 +13,7 @@ import java.sql.Statement;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class FlywaySchemaMigrationTest {
     @TempDir
@@ -52,19 +53,25 @@ class FlywaySchemaMigrationTest {
         try (Connection connection = DriverManager.getConnection(jdbcUrl); Statement statement = connection.createStatement()) {
             assertEquals(3, readSchemaVersion(statement));
             boolean hasBigintExpiresAt = false;
+            boolean hasCreatorAccountId = false;
             try (ResultSet columns = statement.executeQuery("PRAGMA table_info(channel_authorizations)")) {
                 while (columns.next()) {
                     if ("expires_at".equals(columns.getString("name"))) {
                         hasBigintExpiresAt = "BIGINT".equalsIgnoreCase(columns.getString("type"));
                     }
+                    if ("creator_account_id".equals(columns.getString("name"))) {
+                        hasCreatorAccountId = true;
+                    }
                 }
             }
             assertTrue(hasBigintExpiresAt);
+            assertTrue(hasCreatorAccountId);
             try (ResultSet result = statement.executeQuery(
-                    "SELECT access_token, refresh_token FROM channel_authorizations WHERE provider_user_id='existing-user'")) {
+                    "SELECT access_token, refresh_token, creator_account_id FROM channel_authorizations WHERE provider_user_id='existing-user'")) {
                 assertTrue(result.next());
                 assertEquals("still-encrypted-access", result.getString("access_token"));
                 assertEquals("still-encrypted-refresh", result.getString("refresh_token"));
+                assertNull(result.getObject("creator_account_id"));
             }
         }
     }
@@ -80,6 +87,8 @@ class FlywaySchemaMigrationTest {
             assertTrue(tableExists(statement, "channel_authorizations"));
             assertTrue(tableExists(statement, "command"));
             assertTrue(tableExists(statement, "twitch_user"));
+            assertTrue(tableExists(statement, "creator_accounts"));
+            assertTrue(tableExists(statement, "creator_account_tokens"));
         }
     }
 

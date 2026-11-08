@@ -23,10 +23,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
         "spring.sql.init.mode=never",
         "spring.flyway.baseline-on-migrate=true",
         "spring.flyway.baseline-version=0",
+        "spring.mail.host=localhost",
+        "spring.mail.port=1025",
         "spring.flyway.clean-disabled=true"
 })
+
 class WebsocketTwitchChatApplicationTests {
     private static final Path DATABASE_PATH = createDatabasePath();
+
 
     @DynamicPropertySource
     static void configureSqlite(DynamicPropertyRegistry registry) {
