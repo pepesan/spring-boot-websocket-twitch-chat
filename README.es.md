@@ -31,7 +31,7 @@ El wrapper descarga la versión fijada de Gradle. La versión local actual es Gr
 
 El adaptador actual solicita los scopes `chat:read`, `chat:edit`, `moderator:read:followers`, `bits:read` y `channel:read:subscriptions`.
 
-## Arrancar con una base local limpia
+## Arrancar el backend en local
 
 ```sh
 ./dev-local.sh

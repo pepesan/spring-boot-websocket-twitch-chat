@@ -31,7 +31,7 @@ The wrapper downloads the pinned Gradle version. The current local runtime is Gr
 
 The local Twitch adapter requests `chat:read`, `chat:edit`, `moderator:read:followers`, `bits:read`, and `channel:read:subscriptions`.
 
-## Start from a clean local database
+## Start the backend locally
 
 ```sh
 ./dev-local.sh
