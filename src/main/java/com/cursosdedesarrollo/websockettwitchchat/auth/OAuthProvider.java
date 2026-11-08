@@ -1,4 +1,4 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.auth;
 
 import java.net.URI;
 import java.util.List;
@@ -18,4 +18,13 @@ public interface OAuthProvider {
     OAuthTokenResponse refreshAccessToken(String refreshToken);
 
     OAuthIdentity validateAccessToken(String accessToken);
+
+    default boolean isInvalidAccessTokenFailure(OAuthProviderException failure) {
+        return providerId().equals(failure.providerId()) && failure.statusCode() == 401;
+    }
+
+    default boolean isInvalidRefreshTokenFailure(OAuthProviderException failure) {
+        return providerId().equals(failure.providerId())
+                && (failure.statusCode() == 400 || failure.statusCode() == 401);
+    }
 }

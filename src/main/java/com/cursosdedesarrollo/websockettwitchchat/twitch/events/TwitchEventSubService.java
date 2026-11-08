@@ -1,4 +1,4 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.twitch.events;
 
 import com.cursosdedesarrollo.websockettwitchchat.domain.ChannelAuthorization;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;

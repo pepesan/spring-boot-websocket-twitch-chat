@@ -1,4 +1,4 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.auth;
 
 import org.junit.jupiter.api.Test;
 

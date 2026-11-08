@@ -1,4 +1,4 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.commands;
 
 import com.cursosdedesarrollo.websockettwitchchat.domain.Command;
 import com.cursosdedesarrollo.websockettwitchchat.domain.Configuracion;

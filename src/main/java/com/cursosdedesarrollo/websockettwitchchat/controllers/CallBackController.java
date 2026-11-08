@@ -1,12 +1,12 @@
 package com.cursosdedesarrollo.websockettwitchchat.controllers;
 
 import com.cursosdedesarrollo.websockettwitchchat.domain.ChannelAuthorization;
-import com.cursosdedesarrollo.websockettwitchchat.services.ChannelAuthorizationService;
-import com.cursosdedesarrollo.websockettwitchchat.services.ChannelConnector;
-import com.cursosdedesarrollo.websockettwitchchat.services.ChannelConnectorRegistry;
-import com.cursosdedesarrollo.websockettwitchchat.services.OAuthProvider;
-import com.cursosdedesarrollo.websockettwitchchat.services.OAuthProviderRegistry;
-import com.cursosdedesarrollo.websockettwitchchat.services.OAuthTokenResponse;
+import com.cursosdedesarrollo.websockettwitchchat.auth.ChannelAuthorizationService;
+import com.cursosdedesarrollo.websockettwitchchat.channels.ChannelConnector;
+import com.cursosdedesarrollo.websockettwitchchat.channels.ChannelConnectorRegistry;
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProvider;
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProviderRegistry;
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthTokenResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;

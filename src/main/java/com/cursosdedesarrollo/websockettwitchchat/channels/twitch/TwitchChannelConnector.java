@@ -1,4 +1,8 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.channels.twitch;
+
+import com.cursosdedesarrollo.websockettwitchchat.channels.ChannelConnector;
+import com.cursosdedesarrollo.websockettwitchchat.twitch.TwitchChatClient;
+import com.cursosdedesarrollo.websockettwitchchat.twitch.TwitchHelixClient;
 
 import com.cursosdedesarrollo.websockettwitchchat.domain.ChannelAuthorization;
 import com.cursosdedesarrollo.websockettwitchchat.twitch.TwitchChatClient;
@@ -27,6 +31,22 @@ public class TwitchChannelConnector implements ChannelConnector {
         }
         helixClient.connect();
         chatClient.connect(authorization);
-        chatClient.connectAndJoinChannel();
+        chatClient.connectAndJoinChannel(authorization.providerUserId());
+    }
+
+    @Override
+    public void disconnect(ChannelAuthorization authorization) {
+        if (!providerId().equals(authorization.providerId())) {
+            throw new IllegalArgumentException("Authorization belongs to a different channel provider");
+        }
+        chatClient.disconnect(authorization.providerUserId());
+    }
+
+    @Override
+    public boolean isConnected(ChannelAuthorization authorization) {
+        if (!providerId().equals(authorization.providerId())) {
+            return false;
+        }
+        return chatClient.isConnected(authorization.providerUserId());
     }
 }

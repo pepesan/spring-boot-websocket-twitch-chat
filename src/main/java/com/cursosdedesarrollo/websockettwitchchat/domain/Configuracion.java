@@ -1,8 +1,5 @@
 package com.cursosdedesarrollo.websockettwitchchat.domain;
 
-import com.cursosdedesarrollo.websockettwitchchat.controllers.CallBackController;
-import com.cursosdedesarrollo.websockettwitchchat.domain.Command;
-import com.cursosdedesarrollo.websockettwitchchat.domain.Scope;
 import lombok.Data;
 import org.json.JSONArray;
 import org.json.JSONObject;

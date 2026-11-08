@@ -35,6 +35,13 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 - El callback valida identidad, Client ID y scopes requeridos antes de persistir. La conexión del canal existente se delega al conector Twitch.
 - Pruebas unitarias verifican contrato/selección de proveedor, aislamiento de state, validación antes de persistir, identidad por proveedor, cifrado y migración v1→v2. Smoke: aplicación Spring Boot 4.1.2/Java 25 arranca y `/callback/twitch/start` responde HTTP 302; sin conectar a Twitch real.
 
+### Ciclo de vida y conexiones aisladas por canal
+
+- Al arrancar y cada hora se validan las autorizaciones persistidas. Si expira un access token, se renueva y los tokens rotatorios se guardan en SQLite; ante refresh inválido, el canal queda marcado para reautorización y se desconecta.
+- Si la validación falla por un error transitorio, no se invalida la autorización ni se desconecta un chat activo. Al arrancar, se restauran las conexiones autorizadas; si cambian los tokens, se reconecta solo el canal afectado.
+- Twitch mantiene una conexión independiente por ID de usuario del proveedor. Las respuestas de comandos integrados se envían por la conexión del canal de origen; el prefijo configurable se interpreta como tal.
+- Pruebas unitarias cubren refresh, concurrencia con refresh token rotatorio, fallos transitorios, restauración y aislamiento al desconectar un canal.
+
 ### Migración de eventos de canal
 
 - Sustituidas las suscripciones PubSub por EventSub WebSocket para follows, cheers, raids, suscripciones, regalos y mensajes de suscripción; cada condición usa el ID estable del canal autorizado.
@@ -42,9 +49,9 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 
 ### Limitaciones aún abiertas
 
-- Falta gestionar el ciclo de vida tras el consentimiento: validación al arranque y cada hora, renovación reactiva con persistencia atómica del refresh token rotatorio, revocación y parada/reconexión por canal.
+- La revocación explícita desde la interfaz aún no está implementada; un refresh token inválido sí marca el canal para volver a autorizarlo.
 - Solo está implementado el adaptador Twitch; no hay adaptador YouTube ni de otras plataformas.
-- La gestión simultánea de todos los canales, onboarding guiado, interfaz Vue, chat unificado/fuentes OBS, comandos online y despliegue/instalador Linux siguen pendientes.
+- La interfaz para gestionar varios canales y comandos, onboarding guiado, Vue, chat unificado/fuentes OBS y despliegue/instalador Linux siguen pendientes. El runtime ya mantiene conexiones Twitch aisladas por canal.
 
 ## Registro de siguientes cambios
 

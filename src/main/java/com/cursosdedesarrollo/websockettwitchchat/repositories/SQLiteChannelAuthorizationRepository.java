@@ -1,7 +1,7 @@
 package com.cursosdedesarrollo.websockettwitchchat.repositories;
 
 import com.cursosdedesarrollo.websockettwitchchat.domain.ChannelAuthorization;
-import com.cursosdedesarrollo.websockettwitchchat.services.TokenCipher;
+import com.cursosdedesarrollo.websockettwitchchat.security.TokenCipher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -106,6 +107,35 @@ public class SQLiteChannelAuthorizationRepository {
             }
         } catch (SQLException exception) {
             throw new IllegalStateException("Could not read provider channel authorization", exception);
+        }
+    }
+
+    public List<ChannelAuthorization> findAll() {
+        String sql = """
+                SELECT provider_id, provider_user_id, login, access_token, refresh_token, scopes,
+                       expires_at, status, validated_at, updated_at
+                FROM channel_authorizations ORDER BY provider_id, provider_user_id
+                """;
+        List<ChannelAuthorization> authorizations = new ArrayList<>();
+        try (Connection connection = openConnection();
+             PreparedStatement statement = connection.prepareStatement(sql);
+             ResultSet result = statement.executeQuery()) {
+            while (result.next()) {
+                authorizations.add(new ChannelAuthorization(
+                        result.getString("provider_id"),
+                        result.getString("provider_user_id"),
+                        result.getString("login"),
+                        tokenCipher.decrypt(result.getString("access_token")),
+                        tokenCipher.decrypt(result.getString("refresh_token")),
+                        parseScopes(result.getString("scopes")),
+                        readInstant(result, "expires_at"),
+                        ChannelAuthorization.Status.valueOf(result.getString("status")),
+                        readInstant(result, "validated_at"),
+                        readInstant(result, "updated_at")));
+            }
+            return List.copyOf(authorizations);
+        } catch (SQLException exception) {
+            throw new IllegalStateException("Could not list provider channel authorizations", exception);
         }
     }
 

@@ -1,4 +1,4 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.channels;
 
 import org.springframework.stereotype.Component;
 
@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Component
 public class ChannelConnectorRegistry {
@@ -26,5 +27,9 @@ public class ChannelConnectorRegistry {
             throw new IllegalArgumentException("No channel connector for OAuth provider: " + providerId);
         }
         return connector;
+    }
+
+    public Optional<ChannelConnector> find(String providerId) {
+        return Optional.ofNullable(connectors.get(providerId));
     }
 }

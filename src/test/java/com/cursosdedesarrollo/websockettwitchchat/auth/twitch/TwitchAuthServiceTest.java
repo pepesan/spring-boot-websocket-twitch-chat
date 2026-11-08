@@ -1,4 +1,8 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.auth.twitch;
+
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthIdentity;
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProviderException;
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthTokenResponse;
 
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -164,8 +168,8 @@ class TwitchAuthServiceTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("{\"status\":401,\"message\":\"invalid access token\",\"token\":\"response-secret\"}"));
 
-        TwitchAuthService.TwitchAuthException exception = assertThrows(
-                TwitchAuthService.TwitchAuthException.class, () -> service.validateAccessToken(ACCESS_TOKEN));
+        OAuthProviderException exception = assertThrows(
+                OAuthProviderException.class, () -> service.validateAccessToken(ACCESS_TOKEN));
 
         assertEquals(401, exception.statusCode());
         server.verify();
@@ -180,7 +184,7 @@ class TwitchAuthServiceTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .body("{\"access_token\":\"response-secret\",\"message\":\"invalid code\"}"));
 
-        assertThrows(TwitchAuthService.TwitchAuthException.class, () -> service.exchangeAuthorizationCode(AUTHORIZATION_CODE));
+        assertThrows(OAuthProviderException.class, () -> service.exchangeAuthorizationCode(AUTHORIZATION_CODE));
 
         server.verify();
         assertNoSensitiveValuesInLogs();

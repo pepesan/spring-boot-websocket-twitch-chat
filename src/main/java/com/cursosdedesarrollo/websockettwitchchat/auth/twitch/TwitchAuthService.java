@@ -1,4 +1,9 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.auth.twitch;
+
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthIdentity;
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProvider;
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthProviderException;
+import com.cursosdedesarrollo.websockettwitchchat.auth.OAuthTokenResponse;
 
 import com.cursosdedesarrollo.websockettwitchchat.domain.TwitchConfig;
 import org.slf4j.Logger;
@@ -113,7 +118,7 @@ public class TwitchAuthService implements OAuthProvider {
             return validation;
         } catch (HttpStatusCodeException exception) {
             logHttpFailure("token validation", exception);
-            throw new TwitchAuthException(exception.getStatusCode().value());
+            throw new OAuthProviderException(providerId(), exception.getStatusCode().value());
         }
     }
 
@@ -143,7 +148,7 @@ public class TwitchAuthService implements OAuthProvider {
             return token;
         } catch (HttpStatusCodeException exception) {
             logHttpFailure(operation, exception);
-            throw new TwitchAuthException(exception.getStatusCode().value());
+            throw new OAuthProviderException(providerId(), exception.getStatusCode().value());
         }
     }
 
@@ -151,17 +156,5 @@ public class TwitchAuthService implements OAuthProvider {
         logger.error("Twitch {} failed with HTTP status {}", operation, exception.getStatusCode());
     }
 
-    public static final class TwitchAuthException extends RuntimeException {
-        private final int statusCode;
-
-        public TwitchAuthException(int statusCode) {
-            super("Twitch authentication request failed with HTTP status " + statusCode);
-            this.statusCode = statusCode;
-        }
-
-        public int statusCode() {
-            return statusCode;
-        }
-    }
 
 }

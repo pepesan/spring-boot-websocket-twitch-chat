@@ -42,6 +42,7 @@ src/main/resources/application.properties.bot
 
 myapp.log
 /.mcp.json
+/.omp/lsp.json
 PLAN.md
 CLAUDE.md
 AGENTS.md

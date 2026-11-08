@@ -1,4 +1,4 @@
-package com.cursosdedesarrollo.websockettwitchchat.services;
+package com.cursosdedesarrollo.websockettwitchchat.security;
 
 public final class TokenCipherKeysetGenerator {
     private TokenCipherKeysetGenerator() {

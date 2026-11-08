@@ -1,7 +1,7 @@
 package com.cursosdedesarrollo.websockettwitchchat.repositories;
 
 import com.cursosdedesarrollo.websockettwitchchat.domain.ChannelAuthorization;
-import com.cursosdedesarrollo.websockettwitchchat.services.TokenCipher;
+import com.cursosdedesarrollo.websockettwitchchat.security.TokenCipher;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -55,6 +55,7 @@ class SQLiteChannelAuthorizationRepositoryTest {
         assertEquals("video_login", repository.findByProviderUserId("youtube", "1001").orElseThrow().login());
         assertEquals("second_login", repository.findByProviderUserId("twitch", "2002").orElseThrow().login());
         assertTrue(repository.findByProviderUserId("twitch", "3003").isEmpty());
+        assertEquals(3, repository.findAll().size());
     }
 
     @Test
