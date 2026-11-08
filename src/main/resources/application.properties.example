@@ -6,11 +6,9 @@ spring.datasource.password=
 spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
 twitch.clientId=MY_CLIENT_ID
 twitch.clientSecret=MY_CLIENT_SECRET
-twitch.accessToken=MY_ACCESS_TOKEN
-twitch.oauthToken=MY_OAUTH_TOKEN
-twitch.channel=MY_CHANNEL_NAME
+twitch.redirect_uri=http://localhost:8080/callback/twitch
 
-# Credenciales de canal: SQLite y keyset AES-GCM generado por Google Tink.
-twitch.credentials.database=./data/twitch-chat.sqlite
+# Credenciales OAuth por proveedor: SQLite y keyset AES-GCM generado por Google Tink.
+oauth.credentials.database=./data/oauth-credentials.sqlite
 # Configurar TWITCH_TOKEN_ENCRYPTION_KEYSET con el keyset Base64 generado por la aplicación.
 twitch.credentials.encryption-keyset=${TWITCH_TOKEN_ENCRYPTION_KEYSET:}

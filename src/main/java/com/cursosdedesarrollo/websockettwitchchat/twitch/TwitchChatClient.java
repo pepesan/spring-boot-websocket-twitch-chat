@@ -1,42 +1,30 @@
 package com.cursosdedesarrollo.websockettwitchchat.twitch;
 
+import com.cursosdedesarrollo.websockettwitchchat.domain.ChannelAuthorization;
 import com.cursosdedesarrollo.websockettwitchchat.domain.Command;
 import com.cursosdedesarrollo.websockettwitchchat.domain.TwitchConfig;
 import com.cursosdedesarrollo.websockettwitchchat.services.JsonConfigService;
+import com.cursosdedesarrollo.websockettwitchchat.services.TwitchEventSubService;
 import com.cursosdedesarrollo.websockettwitchchat.websocket.MyWebSocketHandler;
-import com.github.philippheuer.credentialmanager.CredentialManager;
-import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
-import com.github.philippheuer.events4j.simple.SimpleEventHandler;
-import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
-import com.github.twitch4j.chat.events.channel.*;
-import com.github.twitch4j.eventsub.events.ChannelSubscribeEvent;
-import com.github.twitch4j.helix.domain.*;
-import com.github.twitch4j.pubsub.events.ChannelBitsEvent;
-import com.github.twitch4j.pubsub.events.ChannelPointsRedemptionEvent;
-import com.github.twitch4j.pubsub.events.ChannelSubGiftEvent;
-import com.github.twitch4j.pubsub.events.CharityCampaignDonationEvent;
-import com.github.twitch4j.pubsub.events.CheerbombEvent;
-import com.github.twitch4j.pubsub.events.FollowingEvent;
-import com.github.twitch4j.pubsub.events.LowTrustUserNewMessageEvent;
-import com.github.twitch4j.pubsub.events.PubSubConnectionStateEvent;
-import com.github.twitch4j.pubsub.events.PointsSpentEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
 import com.github.philippheuer.events4j.api.domain.IDisposable;
+import com.github.philippheuer.events4j.simple.SimpleEventHandler;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.TwitchClientBuilder;
+import com.github.twitch4j.chat.events.channel.*;
+import com.github.twitch4j.eventsub.events.*;
+import com.github.twitch4j.helix.domain.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Date;
-import java.time.LocalDateTime;
-import java.time.Duration;
 
 @Component
 public class TwitchChatClient {
@@ -59,6 +47,9 @@ public class TwitchChatClient {
 
     @Autowired
     private TwitchConfig twitchConfig;
+    @Autowired
+    private TwitchEventSubService twitchEventSubService;
+    private ChannelAuthorization activeAuthorization;
     public OAuth2Credential oAuth2Credential;
 
     public Set<String> mods;
@@ -102,35 +93,32 @@ public class TwitchChatClient {
     }
 
 
-    public void connect() {
-//        CredentialManager credentialManager = CredentialManagerBuilder.builder()
-//                .build();
-//        credentialManager.registerIdentityProvider(new TwitchIdentityProvider(this.twitchConfig.getClientId(), this.twitchConfig.getClientSecret(), this.twitchConfig.getRedirectUri()));
-        oAuth2Credential = new OAuth2Credential("twitch", this.twitchConfig.getOauthToken());
-        logger.info("Bot Chat inicializando");
+    public void connect(ChannelAuthorization authorization) {
+        if (!"twitch".equals(authorization.providerId())) {
+            throw new IllegalArgumentException("Authorization belongs to a different chat provider");
+        }
+        this.activeAuthorization = authorization;
+        oAuth2Credential = new OAuth2Credential("twitch", authorization.accessToken());
+        logger.info("Bot Chat inicializando para el canal {}", authorization.login());
         twitchClient = TwitchClientBuilder.builder()
+                .withClientId(twitchConfig.getClientId())
+                .withClientSecret(twitchConfig.getClientSecret())
                 .withEnableHelix(true)
                 .withEnableChat(true)
                 .withEnableEventSocket(true)
-                .withEnablePubSub(true)
                 .withChatAccount(oAuth2Credential)
+                .withDefaultAuthToken(oAuth2Credential)
                 .withDefaultEventHandler(SimpleEventHandler.class)
-                //.withCredentialManager(credentialManager)
                 .build();
-        // pubsub
-        twitchClient.getPubSub().listenForFollowingEvents(oAuth2Credential, this.twitchConfig.getChannelId());
-        twitchClient.getPubSub().listenForCheerEvents(oAuth2Credential, this.twitchConfig.getChannelId());
-        twitchClient.getPubSub().listenForRaidEvents(oAuth2Credential, this.twitchConfig.getChannelId());
-        twitchClient.getPubSub().listenForChannelSubGiftsEvents(oAuth2Credential, this.twitchConfig.getChannelId());
-        twitchClient.getPubSub().listenForSubscriptionEvents(oAuth2Credential, this.twitchConfig.getChannelId());
-        //twitchClient.getPubSub().listenForUserChannelPointsEvents(oAuth2Credential, this.twitchConfig.getChannelId());
-        logger.info("Bot Chat conectando");
+        registerEvents();
+        twitchEventSubService.registerChannelSubscriptions(twitchClient.getEventSocket(), authorization);
+        logger.info("Bot Chat conectando para el canal {}", authorization.login());
     }
     public void getChannelMods(){
         this.mods = new HashSet<>();
         List<Moderator> listMods = twitchClient
                 .getHelix()
-                .getModerators(this.twitchConfig.getOauthToken(), this.twitchConfig.getChannelId(), null, null, null)
+                .getModerators(activeAuthorization.accessToken(), activeAuthorization.providerUserId(), null, null, null)
                 .execute()
                 .getModerators();
         for(Moderator mod : listMods){
@@ -140,8 +128,7 @@ public class TwitchChatClient {
     }
 
     public void connectAndJoinChannel() {
-        twitchClient.getChat().joinChannel(this.twitchConfig.getChannel());
-        registerEvents();
+        twitchClient.getChat().joinChannel(activeAuthorization.login());
     }
 
     public void registerEvents(){
@@ -153,7 +140,7 @@ public class TwitchChatClient {
                         event -> {
                             logger.info("[" + event.getChannel().getName() + "]["+event.getPermissions().toString()+"] " + event.getUser().getName() + ": " + event.getMessage());
                             if(event.getMessage().startsWith("!")){
-                                this.executeCommands(event, this.twitchConfig.getChannel(), myWebSocketHandler);
+                                this.executeCommands(event, activeAuthorization.login(), myWebSocketHandler);
                             }else {
                                 logger.info("received message: {}", event.getMessage());
                                 try {
@@ -166,79 +153,27 @@ public class TwitchChatClient {
 
                         }
                 );
-        twitchClient.getEventManager().onEvent(RaidEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(ChannelBitsEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(ChannelJoinEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(ChannelLeaveEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(ChannelModEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(ChannelNoticeEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(ChannelPointsRedemptionEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(ChannelMessageActionEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(ChannelSubGiftEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
+        twitchClient.getEventManager().onEvent(ChannelFollowEvent.class,
+                event -> logEventSub("channel.follow"));
+        twitchClient.getEventManager().onEvent(ChannelCheerEvent.class,
+                event -> logEventSub("channel.cheer"));
+        twitchClient.getEventManager().onEvent(ChannelRaidEvent.class,
+                event -> logEventSub("channel.raid"));
         twitchClient.getEventManager().onEvent(ChannelSubscribeEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(CharityCampaignDonationEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(CheerbombEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(FollowingEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(LowTrustUserNewMessageEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(PubSubConnectionStateEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(PointsSpentEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
-        twitchClient.getEventManager().onEvent(PointsSpentEvent.class,
-                event -> {
-                    logger.info(event.toString());
-                });
+                event -> logEventSub("channel.subscribe"));
+        twitchClient.getEventManager().onEvent(ChannelSubscriptionGiftEvent.class,
+                event -> logEventSub("channel.subscription.gift"));
+        twitchClient.getEventManager().onEvent(ChannelSubscriptionMessageEvent.class,
+                event -> logEventSub("channel.subscription.message"));
+    }
+
+    private void logEventSub(String eventType) {
+        logger.info("Twitch EventSub {} received for channel {}", eventType, activeAuthorization.login());
     }
 
     public void sendMessage(String message) {
         logger.info("Mandando el primer mensaje al chat");
-        twitchClient.getChat().sendMessage(this.twitchConfig.getChannel(), message);
+        twitchClient.getChat().sendMessage(activeAuthorization.login(), message);
     }
 
     public void disconnect() {
@@ -282,10 +217,10 @@ public class TwitchChatClient {
                     logger.info("No hay comando en el json o la BBDD");
                 }
             }
-            if(event.getUser().getName().equals(this.twitchConfig.getChannel()) || this.mods.contains(event.getUser().getName())){
+            if(event.getUser().getName().equals(activeAuthorization.login()) || this.mods.contains(event.getUser().getName())){
                 if(message.startsWith("!subs")){
                     logger.info("!subs");
-                    String channelName = this.twitchConfig.getChannel();
+                    String channelName = activeAuthorization.login();
                     try {
 //                    List<User> users = twitchHelixClient.client.getUsers(
 //                            null,
@@ -295,7 +230,7 @@ public class TwitchChatClient {
 //                    String channelToString = users.get(0).toString();
                         String userId = oAuth2Credential.getUserId();
                         logger.info("userId: {}", userId);
-                        List<Subscription> subs = this.twitchClient.getHelix().getSubscriptions(this.twitchConfig.getOauthToken(), userId, null, null, null).execute().getSubscriptions();
+                        List<Subscription> subs = this.twitchClient.getHelix().getSubscriptions(activeAuthorization.accessToken(), userId, null, null, null).execute().getSubscriptions();
                         logger.info("subs {}", subs);
                     }catch (Exception e){
                         logger.error("Petando en la petición Helix a subs");
@@ -394,7 +329,7 @@ public class TwitchChatClient {
     }
 
     private boolean comprobamosPermisos(Command c, String user) {
-        if (c.getOwnerOnly() && user.equals(twitchConfig.getChannel())){
+        if (c.getOwnerOnly() && user.equals(activeAuthorization.login())){
             return true;
         }
         if (c.getOnlyMods() && this.mods.contains(user)){

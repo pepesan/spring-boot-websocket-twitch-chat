@@ -34,7 +34,7 @@ public class SQLiteChannelAuthorizationRepository {
 
     @Autowired
     public SQLiteChannelAuthorizationRepository(
-            @Value("${twitch.credentials.database:./data/twitch-chat.sqlite}") String databasePath,
+            @Value("${oauth.credentials.database:./data/oauth-credentials.sqlite}") String databasePath,
             TokenCipher tokenCipher) {
         this(Path.of(databasePath), tokenCipher);
     }
@@ -48,10 +48,10 @@ public class SQLiteChannelAuthorizationRepository {
     public void save(ChannelAuthorization authorization) {
         String sql = """
                 INSERT INTO channel_authorizations (
-                    broadcaster_id, login, access_token, refresh_token, scopes,
+                    provider_id, provider_user_id, login, access_token, refresh_token, scopes,
                     expires_at, status, validated_at, updated_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(broadcaster_id) DO UPDATE SET
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(provider_id, provider_user_id) DO UPDATE SET
                     login = excluded.login,
                     access_token = excluded.access_token,
                     refresh_token = excluded.refresh_token,
@@ -62,36 +62,39 @@ public class SQLiteChannelAuthorizationRepository {
                     updated_at = excluded.updated_at
                 """;
         try (Connection connection = openConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, authorization.broadcasterId());
-            statement.setString(2, authorization.login());
-            statement.setString(3, tokenCipher.encrypt(authorization.accessToken()));
-            statement.setString(4, tokenCipher.encrypt(authorization.refreshToken()));
-            statement.setString(5, String.join(" ", authorization.scopes()));
-            setInstant(statement, 6, authorization.expiresAt());
-            statement.setString(7, authorization.status().name());
-            setInstant(statement, 8, authorization.validatedAt());
-            setInstant(statement, 9, authorization.updatedAt());
+            statement.setString(1, authorization.providerId());
+            statement.setString(2, authorization.providerUserId());
+            statement.setString(3, authorization.login());
+            statement.setString(4, tokenCipher.encrypt(authorization.accessToken()));
+            statement.setString(5, tokenCipher.encrypt(authorization.refreshToken()));
+            statement.setString(6, String.join(" ", authorization.scopes()));
+            setInstant(statement, 7, authorization.expiresAt());
+            statement.setString(8, authorization.status().name());
+            setInstant(statement, 9, authorization.validatedAt());
+            setInstant(statement, 10, authorization.updatedAt());
             statement.executeUpdate();
             restrictFilePermissions();
         } catch (SQLException | IOException exception) {
-            throw new IllegalStateException("Could not persist Twitch channel authorization", exception);
+            throw new IllegalStateException("Could not persist provider channel authorization", exception);
         }
     }
 
-    public Optional<ChannelAuthorization> findByBroadcasterId(String broadcasterId) {
+    public Optional<ChannelAuthorization> findByProviderUserId(String providerId, String providerUserId) {
         String sql = """
-                SELECT broadcaster_id, login, access_token, refresh_token, scopes,
+                SELECT provider_id, provider_user_id, login, access_token, refresh_token, scopes,
                        expires_at, status, validated_at, updated_at
-                FROM channel_authorizations WHERE broadcaster_id = ?
+                FROM channel_authorizations WHERE provider_id = ? AND provider_user_id = ?
                 """;
         try (Connection connection = openConnection(); PreparedStatement statement = connection.prepareStatement(sql)) {
-            statement.setString(1, broadcasterId);
+            statement.setString(1, providerId);
+            statement.setString(2, providerUserId);
             try (ResultSet result = statement.executeQuery()) {
                 if (!result.next()) {
                     return Optional.empty();
                 }
                 return Optional.of(new ChannelAuthorization(
-                        result.getString("broadcaster_id"),
+                        result.getString("provider_id"),
+                        result.getString("provider_user_id"),
                         result.getString("login"),
                         tokenCipher.decrypt(result.getString("access_token")),
                         tokenCipher.decrypt(result.getString("refresh_token")),
@@ -102,7 +105,7 @@ public class SQLiteChannelAuthorizationRepository {
                         readInstant(result, "updated_at")));
             }
         } catch (SQLException exception) {
-            throw new IllegalStateException("Could not read Twitch channel authorization", exception);
+            throw new IllegalStateException("Could not read provider channel authorization", exception);
         }
     }
 
@@ -126,29 +129,48 @@ public class SQLiteChannelAuthorizationRepository {
                 try (ResultSet result = statement.executeQuery("PRAGMA user_version")) {
                     schemaVersion = result.next() ? result.getInt(1) : 0;
                 }
-                if (schemaVersion > 1) {
+                if (schemaVersion > 2) {
                     throw new SQLException("Credential database schema is newer than this application");
                 }
-                if (schemaVersion < 1) {
-                    statement.execute("CREATE TABLE channel_authorizations ("
-                            + "broadcaster_id TEXT PRIMARY KEY NOT NULL,"
-                            + "login TEXT NOT NULL,"
-                            + "access_token TEXT NOT NULL,"
-                            + "refresh_token TEXT NOT NULL,"
-                            + "scopes TEXT NOT NULL,"
-                            + "expires_at INTEGER NULL,"
-                            + "status TEXT NOT NULL,"
-                            + "validated_at INTEGER NULL,"
-                            + "updated_at INTEGER NOT NULL)");
-                    statement.execute("PRAGMA user_version=1");
+                if (schemaVersion == 0) {
+                    createGenericSchema(statement);
+                    statement.execute("PRAGMA user_version=2");
+                } else if (schemaVersion == 1) {
+                    statement.execute("ALTER TABLE channel_authorizations RENAME TO channel_authorizations_v1");
+                    createGenericSchema(statement);
+                    statement.execute("""
+                            INSERT INTO channel_authorizations (
+                                provider_id, provider_user_id, login, access_token, refresh_token, scopes,
+                                expires_at, status, validated_at, updated_at
+                            )
+                            SELECT 'twitch', broadcaster_id, login, access_token, refresh_token, scopes,
+                                   expires_at, status, validated_at, updated_at
+                            FROM channel_authorizations_v1
+                            """);
+                    statement.execute("DROP TABLE channel_authorizations_v1");
+                    statement.execute("PRAGMA user_version=2");
                 }
             }
             restrictFilePermissions();
         } catch (IOException | SQLException exception) {
-            throw new IllegalStateException("Could not initialize Twitch credential database", exception);
+            throw new IllegalStateException("Could not initialize provider credential database", exception);
         }
     }
 
+    private void createGenericSchema(Statement statement) throws SQLException {
+        statement.execute("CREATE TABLE channel_authorizations ("
+                + "provider_id TEXT NOT NULL,"
+                + "provider_user_id TEXT NOT NULL,"
+                + "login TEXT NOT NULL,"
+                + "access_token TEXT NOT NULL,"
+                + "refresh_token TEXT NOT NULL,"
+                + "scopes TEXT NOT NULL,"
+                + "expires_at INTEGER NULL,"
+                + "status TEXT NOT NULL,"
+                + "validated_at INTEGER NULL,"
+                + "updated_at INTEGER NOT NULL,"
+                + "PRIMARY KEY(provider_id, provider_user_id))");
+    }
     private Connection openConnection() throws SQLException {
         return DriverManager.getConnection("jdbc:sqlite:" + databasePath);
     }

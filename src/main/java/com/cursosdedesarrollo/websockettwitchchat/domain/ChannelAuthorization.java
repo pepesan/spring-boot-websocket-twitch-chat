@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Objects;
 
 public record ChannelAuthorization(
-        String broadcasterId,
+        String providerId,
+        String providerUserId,
         String login,
         String accessToken,
         String refreshToken,
@@ -16,8 +17,11 @@ public record ChannelAuthorization(
         Instant updatedAt) {
 
     public ChannelAuthorization {
-        if (broadcasterId == null || broadcasterId.isBlank()) {
-            throw new IllegalArgumentException("Broadcaster ID is required");
+        if (providerId == null || providerId.isBlank()) {
+            throw new IllegalArgumentException("OAuth provider ID is required");
+        }
+        if (providerUserId == null || providerUserId.isBlank()) {
+            throw new IllegalArgumentException("Provider user ID is required");
         }
         if (login == null || login.isBlank()) {
             throw new IllegalArgumentException("Channel login is required");

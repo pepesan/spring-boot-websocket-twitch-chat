@@ -27,17 +27,24 @@ Este archivo registra comportamiento implementado y verificado. Las ideas pendie
 - El callback y el intercambio dejan de registrar parámetros/cuerpos OAuth o valores de tokens; un mensaje de prueba no se envía automáticamente al chat.
 - Pruebas unitarias del inicio OAuth, state, callback, denegación, canje URL-encoded y ausencia de secretos en logs; verificadas con respuestas HTTP simuladas.
 
-### Persistencia segura de autorizaciones — base de fase
+### OAuth extensible y credenciales por proveedor — fase actual
 
-- Añadido el almacén SQLite `data/twitch-chat.sqlite`, con esquema versionado, upsert por broadcaster ID, aislamiento entre canales y permisos de fichero restringidos en sistemas POSIX.
-- Los access/refresh tokens se cifran con Google Tink 1.24.0 (AES-256-GCM). El keyset se configura fuera de SQLite mediante `TWITCH_TOKEN_ENCRYPTION_KEYSET`; `./gradlew generateTwitchCredentialKeyset` genera uno nuevo.
-- Pruebas unitarias cubren persistencia/reapertura, canales independientes, actualización de login/tokens, cifrado en disco, ausencia de clave y descifrado con keyset incorrecto.
-- Esta base aún no está conectada al callback OAuth; la credencial activa sigue en la configuración global hasta validar identidad Twitch en la fase siguiente.
+- Definido un contrato OAuth común (`OAuthProvider`) con registro de proveedores, respuestas de token/identidad neutrales y un adaptador real de Twitch. La URL de autorización, intercambio, renovación, validación e scopes dependen del adaptador.
+- El inicio y callback usan rutas por proveedor (`/callback/{providerId}/start` y `/callback/{providerId}`); `state` es de un solo uso y está aislado por proveedor dentro de la sesión. Un registro separado entrega la autorización al conector de la plataforma.
+- `ChannelAuthorization` y SQLite identifican credenciales por proveedor + ID externo estable. El esquema SQLite v2 migra las filas v1 de Twitch conservando ciphertext; access/refresh tokens siguen cifrados con Google Tink.
+- El callback valida identidad, Client ID y scopes requeridos antes de persistir. La conexión del canal existente se delega al conector Twitch.
+- Pruebas unitarias verifican contrato/selección de proveedor, aislamiento de state, validación antes de persistir, identidad por proveedor, cifrado y migración v1→v2. Smoke: aplicación Spring Boot 4.1.2/Java 25 arranca y `/callback/twitch/start` responde HTTP 302; sin conectar a Twitch real.
+
+### Migración de eventos de canal
+
+- Sustituidas las suscripciones PubSub por EventSub WebSocket para follows, cheers, raids, suscripciones, regalos y mensajes de suscripción; cada condición usa el ID estable del canal autorizado.
+- Pruebas unitarias verifican siete registros, direcciones de raid y rechazo de autorizaciones de otros proveedores. No se realizó una conexión autenticada real a Twitch.
 
 ### Limitaciones aún abiertas
 
-- Falta validar con Twitch la identidad/scopes del canal, renovar tokens y ejecutar la validación periódica.
-- PubSub sigue pendiente de sustitución por EventSub; el onboarding guiado, Vue y el despliegue en Rivendel están planificados, no implementados.
+- Falta gestionar el ciclo de vida tras el consentimiento: validación al arranque y cada hora, renovación reactiva con persistencia atómica del refresh token rotatorio, revocación y parada/reconexión por canal.
+- Solo está implementado el adaptador Twitch; no hay adaptador YouTube ni de otras plataformas.
+- La gestión simultánea de todos los canales, onboarding guiado, interfaz Vue, chat unificado/fuentes OBS, comandos online y despliegue/instalador Linux siguen pendientes.
 
 ## Registro de siguientes cambios
 
